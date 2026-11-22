@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 import { getCurrentUser } from "@/lib/auth";
 import { safeNextPath } from "@/lib/validators";
@@ -20,6 +21,8 @@ interface LoginPageProps {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  await connection();
+
   const params = await searchParams;
   const nextPath = safeNextPath(params.next, "/account");
 

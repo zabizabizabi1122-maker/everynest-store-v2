@@ -88,7 +88,7 @@ export function ProductImages({ productId, images, imageError }: ProductImagesPr
         </ul>
       )}
 
-      <form action={uploadProductImageAction} encType="multipart/form-data" className="mt-5 grid gap-3 rounded-xl border border-neutral-200 bg-neutral-50/70 p-4 sm:grid-cols-[1fr,1fr,auto] sm:items-end">
+      <form action={uploadProductImageAction} className="mt-5 grid gap-3 rounded-xl border border-neutral-200 bg-neutral-50/70 p-4 sm:grid-cols-[1fr,1fr,auto] sm:items-end">
         <div>
           <label htmlFor="image-file" className="block text-xs font-semibold text-neutral-700">
             Image file

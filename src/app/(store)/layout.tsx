@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
 
 import { signOutAction } from "@/app/(auth)/actions";
@@ -32,6 +33,9 @@ const footerLinkClass = "block py-1.5 text-sm text-white/70 transition hover:tex
  * search and the non-authoritative client cart.
  */
 export default async function StoreLayout({ children }: { children: ReactNode }) {
+  // Supabase token validation reads Date.now(); keep this shell request-bound.
+  await connection();
+
   const configured = isSupabaseConfigured();
   const [user, categories] = await Promise.all([
     configured ? getCurrentUser() : Promise.resolve(null),

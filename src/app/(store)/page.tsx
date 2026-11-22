@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 
 import { HeroCarousel } from "@/components/store/hero-carousel";
 import { ProductCard } from "@/components/store/product-card";
@@ -145,6 +146,8 @@ function ProductSection({
 }
 
 export default async function HomePage() {
+  await connection();
+
   const [categories, featured, latest] = await Promise.all([
     loadPublicCategories(),
     loadFeaturedProducts(),
