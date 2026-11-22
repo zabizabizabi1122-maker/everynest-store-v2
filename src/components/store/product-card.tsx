@@ -5,6 +5,7 @@ import { formatPkr } from "@/lib/money";
 import { describeAvailability, type AvailabilityTone } from "@/lib/storefront";
 
 import { ProductImage } from "./product-image";
+import { QuickAddButton } from "./quick-add-button";
 import { WishlistToggle } from "./wishlist-toggle";
 
 const availabilityClass: Record<AvailabilityTone, string> = {
@@ -24,6 +25,9 @@ export function ProductCard({
   const availability = describeAvailability(product.stock);
   const onSale = product.compareAtPaisa !== null;
   const href = `/products/${product.slug}`;
+  const quickAddVariant =
+    product.variantCount === 1 && product.stock > 0 ? product.defaultVariantId : null;
+  const quickAddPrice = product.minPricePaisa;
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
@@ -79,13 +83,22 @@ export function ProductCard({
           {availability.label}
         </p>
 
-        <Link
-          href={href}
-          aria-label={`Choose options and add ${product.name} to cart`}
-          className="mt-3 inline-flex items-center justify-center rounded-[10px] bg-[color:var(--primary)] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--primary-hover)]"
-        >
-          Add to cart
-        </Link>
+        {quickAddVariant !== null && quickAddPrice !== null ? (
+          <QuickAddButton
+            variantId={quickAddVariant}
+            productName={product.name}
+            imageUrl={product.imageUrl}
+            pricePaisa={quickAddPrice}
+          />
+        ) : (
+          <Link
+            href={href}
+            aria-label={`View ${product.name} and choose options`}
+            className="mt-3 inline-flex items-center justify-center rounded-[10px] bg-[color:var(--primary)] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
+          >
+            {product.stock === 0 ? "View product" : product.variantCount > 1 ? "Choose options" : "Add to cart"}
+          </Link>
+        )}
       </div>
     </article>
   );

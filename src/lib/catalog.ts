@@ -38,6 +38,8 @@ export interface CatalogProduct {
   compareAtPaisa: number | null;
   stock: number;
   variantCount: number;
+  /** Sole active variant of a single-variant product, used for card quick-add. */
+  defaultVariantId: string | null;
 }
 
 export interface ProductListingQuery {
@@ -104,7 +106,7 @@ export function attributesToRecord(value: Json): Record<string, string> {
 /** Builds card-ready rows from a page of products and their related rows. */
 function toCatalogProducts(
   products: readonly Pick<ProductRow, "id" | "name" | "slug" | "brand" | "category_id" | "created_at">[],
-  variants: readonly Pick<VariantRow, "product_id" | "price_paisa" | "sale_price_paisa" | "stock">[],
+  variants: readonly Pick<VariantRow, "id" | "product_id" | "price_paisa" | "sale_price_paisa" | "stock">[],
   images: readonly Pick<ImageRow, "product_id" | "url" | "alt_text">[],
 ): CatalogProduct[] {
   return products.map((product) => {
@@ -138,6 +140,7 @@ function toCatalogProducts(
         regularMin !== null && effectiveMin !== null && regularMin > effectiveMin ? regularMin : null,
       stock: ownVariants.reduce((sum, variant) => sum + variant.stock, 0),
       variantCount: ownVariants.length,
+      defaultVariantId: ownVariants[0]?.id ?? null,
     };
   });
 }
@@ -155,7 +158,7 @@ async function hydrateProducts(
   const [variantsResult, imagesResult] = await Promise.all([
     supabase
       .from("product_variants")
-      .select("product_id, price_paisa, sale_price_paisa, stock")
+      .select("id, product_id, price_paisa, sale_price_paisa, stock")
       .in("product_id", ids)
       .eq("is_active", true),
     supabase
@@ -239,7 +242,7 @@ export async function loadProductListing(query: ProductListingQuery): Promise<Pr
   function filteredProducts() {
     let builder = supabase
       .from("products")
-      .select("id, name, slug, brand, category_id, created_at")
+      .select("id, name, slug, brand, category_id, created_at", { count: "exact" })
       .eq("is_active", true);
 
     if (search) builder = builder.ilike("name", `%${search}%`);

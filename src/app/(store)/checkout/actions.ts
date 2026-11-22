@@ -43,6 +43,7 @@ export async function placeOrderAction(
   const parsed = checkoutInputSchema.safeParse({
     idempotencyKey: formString(formData, "idempotencyKey"),
     items,
+    couponCode: formString(formData, "couponCode"),
     ...values,
   });
 

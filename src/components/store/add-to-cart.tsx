@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import type { CategoryAttribute } from "@/lib/category-schema";
@@ -33,6 +34,7 @@ interface AddToCartProps {
  */
 export function AddToCart({ productName, imageUrl, variants, schema }: AddToCartProps) {
   const { addItem, openCart } = useCart();
+  const router = useRouter();
   const [selection, setSelection] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
 
@@ -73,8 +75,8 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
     });
   }
 
-  function handleAdd() {
-    if (!canAdd || !matchedVariant) return;
+  function addCurrentVariant(): boolean {
+    if (!canAdd || !matchedVariant) return false;
 
     addItem({
       variantId: matchedVariant.id,
@@ -86,8 +88,16 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
         displayUnitPricePaisa: displayPricePaisa(matchedVariant),
       },
     });
-    openCart();
     setQuantity(1);
+    return true;
+  }
+
+  function handleAdd() {
+    if (addCurrentVariant()) openCart();
+  }
+
+  function handleBuyNow() {
+    if (addCurrentVariant()) router.push("/checkout");
   }
 
   return (
@@ -195,6 +205,15 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
           {matchedVariant && !availability.orderable ? "Out of stock" : "Add to cart"}
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={handleBuyNow}
+        disabled={!canAdd}
+        className="mt-3 inline-flex w-full items-center justify-center rounded-[10px] border border-[color:var(--primary)] px-5 py-2.5 text-sm font-semibold text-[color:var(--primary)] transition hover:bg-[color:var(--primary)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        Buy now
+      </button>
     </div>
   );
 }
