@@ -11,7 +11,7 @@ export function CartButton() {
       type="button"
       onClick={openCart}
       aria-label={`Open cart, ${count} ${count === 1 ? "item" : "items"}`}
-      className="relative inline-flex items-center gap-2 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand)]"
+      className="relative inline-flex size-10 items-center justify-center rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] text-foreground transition hover:bg-[color:var(--background)] hover:text-[color:var(--primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
     >
       <svg
         viewBox="0 0 24 24"
@@ -27,10 +27,9 @@ export function CartButton() {
         <path d="M3 6h18" />
         <path d="M16 10a4 4 0 0 1-8 0" />
       </svg>
-      <span className="hidden sm:inline">Cart</span>
       <span
         aria-hidden="true"
-        className="inline-flex min-w-5 items-center justify-center rounded-full bg-[color:var(--brand)] px-1.5 py-0.5 text-xs font-semibold text-white"
+        className="absolute -right-1.5 -top-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-[color:var(--primary)] px-1.5 py-0.5 text-[11px] font-semibold text-white shadow-sm"
       >
         {count}
       </span>

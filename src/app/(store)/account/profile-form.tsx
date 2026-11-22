@@ -67,7 +67,7 @@ export function ProfileForm({ defaultFullName, defaultPhone }: ProfileFormProps)
         <button type="submit" className={primaryButtonClass} disabled={isPending}>
           {isPending ? "Saving…" : "Save changes"}
         </button>
-        <span className="text-xs text-neutral-500">Only name and phone can be changed.</span>
+        <span className="text-xs text-[color:var(--muted)]">Only name and phone can be changed.</span>
       </div>
     </form>
   );

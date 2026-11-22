@@ -1,25 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --brand: #c07010;
-  --brand-soft: #fff7ed;
+  /* Warm Nest palette — all UI colour flows through these variables. */
+  --background: #faf7f2;
+  --surface: #ffffff;
+  --foreground: #1f2421;
+  --muted: #6b6f6a;
+  --primary: #2f5d50;
+  --primary-hover: #264d42;
+  --accent: #d9733f;
+  --border: #e8e1d6;
+  --footer: #1f3b33;
+
+  /* Compatibility aliases: keeps shared admin/auth/account screens readable
+     without editing those files. `--brand` is now the primary green. */
+  --brand: var(--primary);
+  --brand-soft: var(--background);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-footer: var(--footer);
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-poppins);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-poppins), var(--font-inter), Arial, Helvetica, sans-serif;
+  line-height: 1.2;
+}
+
+/* Low-specificity default; component-level focus styles still win where a
+   different ring colour is needed (for example on dark sections). */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 @keyframes toast-in {

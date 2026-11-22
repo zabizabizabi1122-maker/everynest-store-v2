@@ -29,17 +29,17 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
   return (
     <>
       <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-      <p className="mt-1.5 text-sm text-neutral-600">
+      <p className="mt-1.5 text-sm text-[color:var(--muted)]">
         It takes less than a minute. You can change your name and phone number later.
       </p>
 
       <SignupForm nextPath={nextPath} />
 
-      <p className="mt-6 text-sm text-neutral-600">
+      <p className="mt-6 text-sm text-[color:var(--muted)]">
         Already have an account?{" "}
         <Link
           href={`/login?next=${encodeURIComponent(nextPath)}`}
-          className="font-semibold text-[color:var(--brand)] underline-offset-4 hover:underline"
+          className="font-semibold text-[color:var(--primary)] underline-offset-4 hover:underline"
         >
           Log in
         </Link>

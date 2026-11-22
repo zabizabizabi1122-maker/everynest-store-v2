@@ -7,16 +7,16 @@ import type { ReactNode } from "react";
  * Server and Client Components.
  */
 
-export const labelClass = "block text-sm font-medium text-neutral-800";
+export const labelClass = "block text-sm font-medium text-[color:var(--foreground)]";
 
 export const inputClass =
-  "mt-1.5 block w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-[color:var(--brand)] focus:ring-2 focus:ring-[color:var(--brand)]/20 disabled:cursor-not-allowed disabled:bg-neutral-50";
+  "mt-1.5 block w-full rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] px-3.5 py-2.5 text-sm text-[color:var(--foreground)] shadow-sm outline-none transition placeholder:text-[color:var(--muted)] focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--primary)]/20 disabled:cursor-not-allowed disabled:opacity-60";
 
 export const primaryButtonClass =
-  "inline-flex items-center justify-center rounded-xl bg-[color:var(--brand)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--brand)]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center rounded-[10px] bg-[color:var(--primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export const secondaryButtonClass =
-  "inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand)]";
+  "inline-flex items-center justify-center rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] px-3.5 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--background)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]";
 
 interface FieldProps {
   id: string;
@@ -35,7 +35,7 @@ export function Field({ id, label, error, hint, children }: FieldProps) {
       </label>
       {children}
       {hint && !error ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-xs text-neutral-500">
+        <p id={`${id}-hint`} className="mt-1.5 text-xs text-[color:var(--muted)]">
           {hint}
         </p>
       ) : null}

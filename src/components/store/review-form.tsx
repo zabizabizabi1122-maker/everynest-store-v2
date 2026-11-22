@@ -27,9 +27,9 @@ export function ReviewForm({ productId }: { productId: string }) {
   }
 
   return (
-    <form action={formAction} noValidate className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h3 className="text-base font-semibold text-neutral-900">Write a review</h3>
-      <p className="mt-1 text-xs text-neutral-500">
+    <form action={formAction} noValidate className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <h3 className="text-base font-semibold text-[color:var(--foreground)]">Write a review</h3>
+      <p className="mt-1 text-xs text-[color:var(--muted)]">
         Only customers with a delivered order of this product can leave a review. New reviews are
         checked before they appear publicly.
       </p>

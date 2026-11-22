@@ -18,19 +18,19 @@ export default async function WishlistPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 pb-20 pt-10">
-      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-        <Link href="/" className="hover:text-[color:var(--brand)]">Home</Link>
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--muted)]">
+        <Link href="/" className="hover:text-[color:var(--primary)]">Home</Link>
         <span aria-hidden="true">/</span>
-        <span className="font-medium text-neutral-800">Wishlist</span>
+        <span className="font-medium text-[color:var(--foreground)]">Wishlist</span>
       </nav>
 
       <header className="mt-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--brand)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--primary)]">
             Level 11 · Optional features
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">My wishlist</h1>
-          <p className="mt-1.5 text-sm text-neutral-600">
+          <p className="mt-1.5 text-sm text-[color:var(--muted)]">
             {entries.length === 0
               ? "You have not saved any products yet."
               : `${entries.length} saved ${entries.length === 1 ? "product" : "products"}.`}
@@ -42,11 +42,11 @@ export default async function WishlistPage() {
       </header>
 
       {entries.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-10 text-center">
-          <p className="text-sm text-neutral-600">
+        <div className="mt-8 rounded-2xl border border-[color:var(--border)] bg-[color:var(--background)] p-10 text-center">
+          <p className="text-sm text-[color:var(--muted)]">
             Use the heart button on a product page to save it here for later.
           </p>
-          <Link href="/products" className="mt-4 inline-block font-medium text-[color:var(--brand)] hover:underline">
+          <Link href="/products" className="mt-4 inline-block font-medium text-[color:var(--primary)] hover:underline">
             Explore the catalogue →
           </Link>
         </div>
@@ -56,8 +56,8 @@ export default async function WishlistPage() {
             const product = entry.product;
             if (!product) {
               return (
-                <li key={entry.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-                  <p className="text-sm text-neutral-600">This product is no longer available.</p>
+                <li key={entry.id} className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
+                  <p className="text-sm text-[color:var(--muted)]">This product is no longer available.</p>
                   <form action={removeWishlistItemAction} className="mt-3">
                     <input type="hidden" name="itemId" value={entry.id} />
                     <button type="submit" className="text-sm font-medium text-rose-700 hover:underline">
@@ -69,21 +69,21 @@ export default async function WishlistPage() {
             }
 
             return (
-              <li key={entry.id} className="flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+              <li key={entry.id} className="flex flex-col overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
                 <Link href={`/products/${product.slug}`} className="relative aspect-square">
                   <ProductImage src={product.imageUrl} alt={product.name} />
                 </Link>
                 <div className="flex flex-1 flex-col p-4">
                   <Link
                     href={`/products/${product.slug}`}
-                    className="font-semibold text-neutral-900 hover:text-[color:var(--brand)]"
+                    className="font-semibold text-[color:var(--foreground)] hover:text-[color:var(--primary)]"
                   >
                     {product.name}
                   </Link>
-                  <p className="mt-1 text-sm text-neutral-600">
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
                     {product.minPricePaisa !== null ? formatPkr(product.minPricePaisa) : "Price on request"}
                   </p>
-                  <p className={`mt-1 text-xs ${product.inStock ? "text-emerald-700" : "text-neutral-500"}`}>
+                  <p className={`mt-1 text-xs ${product.inStock ? "text-emerald-700" : "text-[color:var(--muted)]"}`}>
                     {product.inStock ? "In stock" : "Currently unavailable"}
                   </p>
                   <form action={removeWishlistItemAction} className="mt-auto pt-4">

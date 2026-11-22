@@ -116,9 +116,9 @@ export function CheckoutForm({
 
   if (items.length === 0) {
     return (
-      <section className="rounded-2xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
+      <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-8 text-center shadow-sm">
         <h2 className="text-lg font-semibold">Your cart is empty</h2>
-        <p className="mt-2 text-sm text-neutral-600">
+        <p className="mt-2 text-sm text-[color:var(--muted)]">
           Add a product to your cart before checking out.
         </p>
         <Link href="/products" className={`${primaryButtonClass} mt-6`}>
@@ -134,14 +134,14 @@ export function CheckoutForm({
         action={formAction}
         onSubmit={prepareSubmit}
         noValidate
-        className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+        className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm"
       >
         <input ref={keyInput} type="hidden" name="idempotencyKey" defaultValue="" />
         <input ref={itemsInput} type="hidden" name="items" defaultValue="[]" />
         <input type="hidden" name="couponCode" value={coupon?.code ?? ""} />
 
         <h2 className="text-lg font-semibold">Delivery details</h2>
-        <p className="mt-1 text-sm text-neutral-600">
+        <p className="mt-1 text-sm text-[color:var(--muted)]">
           We deliver across Pakistan. Cash on delivery only — no card is required.
         </p>
 
@@ -222,13 +222,13 @@ export function CheckoutForm({
           </Field>
         </div>
 
-        <fieldset className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-          <legend className="px-1 text-sm font-semibold text-neutral-800">Payment method</legend>
-          <label className="flex items-center gap-3 text-sm text-neutral-800">
+        <fieldset className="mt-6 rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-4">
+          <legend className="px-1 text-sm font-semibold text-[color:var(--foreground)]">Payment method</legend>
+          <label className="flex items-center gap-3 text-sm text-[color:var(--foreground)]">
             <input type="radio" name="paymentMethod" value="cod" checked readOnly className="accent-[color:var(--brand)]" />
             <span>
               Cash on Delivery (COD)
-              <span className="block text-xs text-neutral-500">Pay the delivery rider when your order arrives.</span>
+              <span className="block text-xs text-[color:var(--muted)]">Pay the delivery rider when your order arrives.</span>
             </span>
           </label>
         </fieldset>
@@ -241,17 +241,17 @@ export function CheckoutForm({
             Back to cart
           </Link>
         </div>
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-[color:var(--muted)]">
           Final prices and stock are confirmed when the order is placed. No payment is taken online.
         </p>
       </form>
 
-      <aside aria-labelledby="checkout-summary" className="h-fit rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm lg:sticky lg:top-32">
+      <aside aria-labelledby="checkout-summary" className="h-fit rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm lg:sticky lg:top-32">
         <div className="flex items-baseline justify-between gap-3">
           <h2 id="checkout-summary" className="text-lg font-semibold">
             Order summary
           </h2>
-          <span className="text-xs text-neutral-500">
+          <span className="text-xs text-[color:var(--muted)]">
             {count} {count === 1 ? "item" : "items"}
           </span>
         </div>
@@ -263,7 +263,7 @@ export function CheckoutForm({
         <ul className="mt-4 divide-y divide-neutral-100">
           {items.map((item) => (
             <li key={item.variantId} className="flex gap-3 py-3">
-              <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50">
+              <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-[color:var(--border)] bg-[color:var(--background)]">
                 <ProductImage
                   src={trustedCartImageUrl(item.display.imageUrl)}
                   alt={item.display.name}
@@ -271,40 +271,40 @@ export function CheckoutForm({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-neutral-900">{item.display.name}</p>
+                <p className="truncate text-sm font-medium text-[color:var(--foreground)]">{item.display.name}</p>
                 {item.display.attributesLabel ? (
-                  <p className="truncate text-xs text-neutral-500">{item.display.attributesLabel}</p>
+                  <p className="truncate text-xs text-[color:var(--muted)]">{item.display.attributesLabel}</p>
                 ) : null}
-                <p className="mt-0.5 text-xs text-neutral-500">Qty {item.quantity}</p>
+                <p className="mt-0.5 text-xs text-[color:var(--muted)]">Qty {item.quantity}</p>
               </div>
-              <p className="text-sm font-semibold text-neutral-900">
+              <p className="text-sm font-semibold text-[color:var(--foreground)]">
                 {formatPkr(BigInt(item.display.displayUnitPricePaisa) * BigInt(item.quantity))}
               </p>
             </li>
           ))}
         </ul>
 
-        <dl className="mt-4 space-y-2 border-t border-neutral-200 pt-4 text-sm">
+        <dl className="mt-4 space-y-2 border-t border-[color:var(--border)] pt-4 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-neutral-600">Subtotal</dt>
+            <dt className="text-[color:var(--muted)]">Subtotal</dt>
             <dd>{formatPkr(totals.subtotal)}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-neutral-600">Shipping</dt>
+            <dt className="text-[color:var(--muted)]">Shipping</dt>
             <dd className="text-emerald-700">Free</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-neutral-600">Discount</dt>
+            <dt className="text-[color:var(--muted)]">Discount</dt>
             <dd className={couponDiscount > 0n ? "text-emerald-700" : undefined}>
               {coupon && couponDiscount > 0n ? `− ${formatPkr(couponDiscount)}` : formatPkr(0n)}
             </dd>
           </div>
-          <div className="flex justify-between gap-4 border-t border-neutral-200 pt-3 text-base font-semibold">
+          <div className="flex justify-between gap-4 border-t border-[color:var(--border)] pt-3 text-base font-semibold">
             <dt>Estimated total</dt>
             <dd>{formatPkr(estimatedTotal)}</dd>
           </div>
         </dl>
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-[color:var(--muted)]">
           Estimated from your cart snapshot. The confirmed total appears after you place the order.
         </p>
       </aside>

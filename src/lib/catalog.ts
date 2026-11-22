@@ -34,6 +34,8 @@ export interface CatalogProduct {
   imageUrl: string | null;
   imageAlt: string | null;
   minPricePaisa: number | null;
+  /** Lowest regular price, present only when a variant is discounted. Display-only derivation. */
+  compareAtPaisa: number | null;
   stock: number;
   variantCount: number;
 }
@@ -118,6 +120,9 @@ function toCatalogProducts(
       }),
     );
     const firstImage = images.find((image) => image.product_id === product.id);
+    const effectiveMin = prices.length > 0 ? Math.min(...prices) : null;
+    const regularMin =
+      ownVariants.length > 0 ? Math.min(...ownVariants.map((variant) => variant.price_paisa)) : null;
 
     return {
       id: product.id,
@@ -128,7 +133,9 @@ function toCatalogProducts(
       createdAt: product.created_at,
       imageUrl: firstImage?.url ?? null,
       imageAlt: firstImage?.alt_text ?? null,
-      minPricePaisa: prices.length > 0 ? Math.min(...prices) : null,
+      minPricePaisa: effectiveMin,
+      compareAtPaisa:
+        regularMin !== null && effectiveMin !== null && regularMin > effectiveMin ? regularMin : null,
       stock: ownVariants.reduce((sum, variant) => sum + variant.stock, 0),
       variantCount: ownVariants.length,
     };

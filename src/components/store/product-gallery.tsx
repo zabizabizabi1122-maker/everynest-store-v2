@@ -22,7 +22,7 @@ export function ProductGallery({
 
   return (
     <div>
-      <div className="relative aspect-square overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
+      <div className="relative aspect-square overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--background)]">
         <ProductImage
           src={active?.url ?? null}
           alt={active?.altText ?? name}
@@ -40,8 +40,8 @@ export function ProductGallery({
               onClick={() => setActiveIndex(index)}
               aria-label={`View image ${index + 1} of ${images.length}`}
               aria-pressed={index === activeIndex}
-              className={`relative size-20 shrink-0 overflow-hidden rounded-xl border-2 bg-neutral-100 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand)] ${
-                index === activeIndex ? "border-[color:var(--brand)]" : "border-transparent hover:border-neutral-300"
+              className={`relative size-20 shrink-0 overflow-hidden rounded-xl border-2 bg-[color:var(--background)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] ${
+                index === activeIndex ? "border-[color:var(--brand)]" : "border-transparent hover:border-[color:var(--border)]"
               }`}
             >
               <ProductImage src={image.url} alt="" sizes="80px" />

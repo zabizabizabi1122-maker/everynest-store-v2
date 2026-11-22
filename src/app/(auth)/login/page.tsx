@@ -35,17 +35,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <>
       <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-      <p className="mt-1.5 text-sm text-neutral-600">
+      <p className="mt-1.5 text-sm text-[color:var(--muted)]">
         Log in to view your account and track your orders.
       </p>
 
       <LoginForm nextPath={nextPath} notice={notice} />
 
-      <p className="mt-6 text-sm text-neutral-600">
+      <p className="mt-6 text-sm text-[color:var(--muted)]">
         New to EveryNest?{" "}
         <Link
           href={`/signup?next=${encodeURIComponent(nextPath)}`}
-          className="font-semibold text-[color:var(--brand)] underline-offset-4 hover:underline"
+          className="font-semibold text-[color:var(--primary)] underline-offset-4 hover:underline"
         >
           Create an account
         </Link>

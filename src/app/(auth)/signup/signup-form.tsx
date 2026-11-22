@@ -121,7 +121,7 @@ export function SignupForm({ nextPath }: SignupFormProps) {
         {isPending ? "Creating account…" : "Create account"}
       </button>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-[color:var(--muted)]">
         New accounts start as customers. Staff access is granted by the store owner.
       </p>
     </form>

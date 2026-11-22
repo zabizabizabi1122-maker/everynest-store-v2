@@ -31,8 +31,8 @@ export function CouponField({ onValidated }: CouponFieldProps) {
   const error = state.fieldErrors.couponCode?.[0];
 
   return (
-    <form action={formAction} noValidate className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-      <label htmlFor="couponCode" className="block text-xs font-semibold uppercase tracking-wide text-neutral-600">
+    <form action={formAction} noValidate className="rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-3">
+      <label htmlFor="couponCode" className="block text-xs font-semibold uppercase tracking-wide text-[color:var(--muted)]">
         Discount code
       </label>
       <div className="mt-2 flex gap-2">

@@ -5,6 +5,7 @@ import { formatPkr } from "@/lib/money";
 import { describeAvailability, type AvailabilityTone } from "@/lib/storefront";
 
 import { ProductImage } from "./product-image";
+import { WishlistToggle } from "./wishlist-toggle";
 
 const availabilityClass: Record<AvailabilityTone, string> = {
   in: "text-emerald-700",
@@ -21,54 +22,71 @@ export function ProductCard({
   priority?: boolean;
 }) {
   const availability = describeAvailability(product.stock);
+  const onSale = product.compareAtPaisa !== null;
+  const href = `/products/${product.slug}`;
 
   return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand)]"
-    >
-      <div className="relative aspect-square overflow-hidden bg-neutral-100">
-        <ProductImage
-          src={product.imageUrl}
-          alt={product.imageAlt ?? product.name}
-          priority={priority}
-        />
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="relative aspect-[4/5] overflow-hidden bg-[color:var(--background)]">
+        <Link href={href} className="absolute inset-0 block" aria-label={product.name}>
+          <ProductImage
+            src={product.imageUrl}
+            alt={product.imageAlt ?? product.name}
+            priority={priority}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        </Link>
+
+        {onSale ? (
+          <span className="absolute left-2.5 top-2.5 rounded-md bg-[color:var(--accent)] px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--foreground)] shadow-sm">
+            Sale
+          </span>
+        ) : null}
         {availability.tone === "out" ? (
-          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-red-700 shadow-sm">
+          <span className="absolute bottom-2.5 left-2.5 rounded-md bg-[color:var(--surface)]/95 px-2 py-1 text-[11px] font-semibold text-red-700 shadow-sm">
             Out of stock
           </span>
         ) : null}
-        {availability.tone === "low" ? (
-          <span className="absolute left-3 top-3 rounded-full bg-amber-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-            {availability.label}
-          </span>
-        ) : null}
+
+        <div className="absolute right-2.5 top-2.5">
+          <WishlistToggle productId={product.id} compact />
+        </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        {product.brand ? (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
-            {product.brand}
-          </p>
-        ) : null}
-        <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-neutral-900">
-          {product.name}
-        </h3>
+      <div className="flex flex-1 flex-col p-3.5">
+        <Link href={href} className="block">
+          <h3 className="line-clamp-2 font-heading text-base font-medium leading-6 text-foreground transition group-hover:text-[color:var(--primary)]">
+            {product.name}
+          </h3>
+        </Link>
 
-        <p className="mt-3 text-base font-bold text-[color:var(--brand)]">
-          {product.minPricePaisa === null ? (
-            "Price on request"
-          ) : (
-            <>
-              {product.variantCount > 1 ? <span className="mr-1 text-xs font-medium text-neutral-500">From</span> : null}
-              {formatPkr(product.minPricePaisa)}
-            </>
-          )}
-        </p>
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="text-base font-semibold text-[color:var(--primary)]">
+            {product.minPricePaisa === null
+              ? "Price on request"
+              : product.variantCount > 1
+                ? `From ${formatPkr(product.minPricePaisa)}`
+                : formatPkr(product.minPricePaisa)}
+          </span>
+          {onSale && product.compareAtPaisa !== null ? (
+            <span className="text-sm text-[color:var(--muted)] line-through">
+              {formatPkr(product.compareAtPaisa)}
+            </span>
+          ) : null}
+        </div>
+
         <p className={`mt-1 text-xs font-medium ${availabilityClass[availability.tone]}`}>
           {availability.label}
         </p>
+
+        <Link
+          href={href}
+          aria-label={`Choose options and add ${product.name} to cart`}
+          className="mt-3 inline-flex items-center justify-center rounded-[10px] bg-[color:var(--primary)] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--primary-hover)]"
+        >
+          Add to cart
+        </Link>
       </div>
-    </Link>
+    </article>
   );
 }

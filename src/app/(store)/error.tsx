@@ -9,7 +9,7 @@ export default function StoreError({ reset }: { error: Error & { digest?: string
   return (
     <div className="mx-auto w-full max-w-2xl px-6 py-24 text-center">
       <h1 className="text-3xl font-semibold tracking-tight">Something went wrong</h1>
-      <p className="mt-3 text-sm leading-7 text-neutral-600">
+      <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
         We couldn’t load this page. Please try again or browse the catalogue
         from the beginning.
       </p>

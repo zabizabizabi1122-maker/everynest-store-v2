@@ -44,20 +44,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 pb-20 pt-8">
-      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-        <Link href="/" className="hover:text-[color:var(--brand)]">Home</Link>
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--muted)]">
+        <Link href="/" className="hover:text-[color:var(--primary)]">Home</Link>
         <span aria-hidden="true">/</span>
-        <Link href="/products" className="hover:text-[color:var(--brand)]">Products</Link>
+        <Link href="/products" className="hover:text-[color:var(--primary)]">Products</Link>
         {category ? (
           <>
             <span aria-hidden="true">/</span>
-            <Link href={`/products?category=${encodeURIComponent(category.id)}`} className="hover:text-[color:var(--brand)]">
+            <Link href={`/products?category=${encodeURIComponent(category.id)}`} className="hover:text-[color:var(--primary)]">
               {category.name}
             </Link>
           </>
         ) : null}
         <span aria-hidden="true">/</span>
-        <span className="truncate font-medium text-neutral-800">{product.name}</span>
+        <span className="truncate font-medium text-[color:var(--foreground)]">{product.name}</span>
       </nav>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
@@ -65,16 +65,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         <div>
           {product.brand ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
               {product.brand}
             </p>
           ) : null}
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">{product.name}</h1>
 
           {category ? (
-            <p className="mt-2 text-sm text-neutral-500">
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
               Part of{" "}
-              <Link href={`/products?category=${encodeURIComponent(category.id)}`} className="font-medium text-[color:var(--brand)] hover:underline">
+              <Link href={`/products?category=${encodeURIComponent(category.id)}`} className="font-medium text-[color:var(--primary)] hover:underline">
                 {category.name}
               </Link>
             </p>
@@ -83,7 +83,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             {minPrice !== null ? (
               <>
-                <span className="text-3xl font-bold text-[color:var(--brand)]">
+                <span className="text-3xl font-bold text-[color:var(--primary)]">
                   {variants.length > 1 ? "From " : ""}{formatPkr(minPrice)}
                 </span>
                 {minRegular !== null && minRegular > minPrice ? (
@@ -91,11 +91,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 ) : null}
               </>
             ) : (
-              <span className="text-base text-neutral-500">Price on request</span>
+              <span className="text-base text-[color:var(--muted)]">Price on request</span>
             )}
           </div>
 
-          <p className="mt-5 whitespace-pre-line text-sm leading-7 text-neutral-600">
+          <p className="mt-5 whitespace-pre-line text-sm leading-7 text-[color:var(--muted)]">
             {product.description?.trim()
               ? product.description
               : "A carefully selected product from the EveryNest catalogue."}
@@ -115,25 +115,25 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <WishlistToggle productId={product.id} initialSaved={wishlisted} />
             </div>
           ) : (
-            <p className="mt-3 text-xs text-neutral-500">
-              <Link href="/login" className="font-medium text-[color:var(--brand)] hover:underline">
+            <p className="mt-3 text-xs text-[color:var(--muted)]">
+              <Link href="/login" className="font-medium text-[color:var(--primary)] hover:underline">
                 Sign in
               </Link>{" "}
               to save this product to your wishlist.
             </p>
           )}
 
-          <ul className="mt-6 grid gap-3 text-sm text-neutral-600 sm:grid-cols-2">
-            <li className="flex items-start gap-2.5 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-[color:var(--brand)]">
+          <ul className="mt-6 grid gap-3 text-sm text-[color:var(--muted)] sm:grid-cols-2">
+            <li className="flex items-start gap-2.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-[color:var(--primary)]">
                 <path d="M3 7h11v10H3zM14 10h4l3 3v4h-7z" />
                 <circle cx="7" cy="18" r="2" />
                 <circle cx="17.5" cy="18" r="2" />
               </svg>
               Delivered across Pakistan
             </li>
-            <li className="flex items-start gap-2.5 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-[color:var(--brand)]">
+            <li className="flex items-start gap-2.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-[color:var(--primary)]">
                 <rect x="3" y="5" width="18" height="14" rx="2" />
                 <path d="M3 10h18M7 15h4" />
               </svg>
@@ -150,7 +150,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <h2 id="write-review-heading" className="text-2xl font-semibold tracking-tight">
             Share your experience
           </h2>
-          <p className="mt-1 text-sm text-neutral-600">
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
             Reviews are linked to a delivered order and published after a quick check.
           </p>
           <div className="mt-5 max-w-2xl">
@@ -158,8 +158,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </section>
       ) : (
-        <p className="mt-10 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 text-sm text-neutral-600">
-          <Link href="/login?next=/account" className="font-medium text-[color:var(--brand)] hover:underline">
+        <p className="mt-10 rounded-2xl border border-[color:var(--border)] bg-[color:var(--background)] p-5 text-sm text-[color:var(--muted)]">
+          <Link href="/login?next=/account" className="font-medium text-[color:var(--primary)] hover:underline">
             Sign in
           </Link>{" "}
           to leave a review. You need a delivered order of this product.

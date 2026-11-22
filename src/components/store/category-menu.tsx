@@ -1,58 +1,99 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 import type { CatalogCategory } from "@/lib/catalog";
 
+/** The three departments shown in the centred header menu. */
+const DEPARTMENTS = [
+  { slug: "clothes", label: "Clothes" },
+  { slug: "shoes", label: "Shoes" },
+  { slug: "stationery", label: "Stationery" },
+] as const;
+
 /**
- * Native `<details>` dropdown so category navigation needs no client script.
- * Only active categories reach this component (RLS + an explicit filter).
+ * Centred department menu on desktop, hamburger menu on small screens.
+ * Native links keep category navigation working without client JavaScript;
+ * the client state here only opens and closes the mobile panel.
  */
 export function CategoryMenu({ categories }: { categories: readonly CatalogCategory[] }) {
-  const roots = categories.filter((category) => category.parentId === null);
+  const [open, setOpen] = useState(false);
 
-  // The shell already renders a Products link, so there is nothing to add when
-  // no active categories exist yet.
-  if (roots.length === 0) return null;
+  const links = DEPARTMENTS.map(({ slug, label }) => {
+    const category = categories.find((item) => item.slug === slug && item.parentId === null);
+    return {
+      label,
+      href: category
+        ? `/products?category=${encodeURIComponent(category.id)}`
+        : "/products",
+    };
+  });
 
   return (
-    <details className="group relative">
-      <summary className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-neutral-700 transition hover:text-[color:var(--brand)] [&::-webkit-details-marker]:hidden">
-        Categories
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="size-3.5 transition group-open:rotate-180">
-          <path d="m6 9 6 6 6-6" />
-        </svg>
-      </summary>
+    <>
+      <nav
+        aria-label="Shop by category"
+        className="hidden items-center gap-1 md:flex"
+      >
+        {links.map((link) => (
+          <Link
+            key={link.label}
+            href={link.href}
+            className="rounded-[10px] px-3 py-2 text-sm font-medium text-foreground transition hover:bg-[color:var(--background)] hover:text-[color:var(--primary)]"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
 
-      <div className="absolute left-0 top-full z-40 mt-1 max-h-96 w-60 overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl">
-        <Link
-          href="/products"
-          className="block rounded-lg px-3 py-2 text-sm font-semibold text-[color:var(--brand)] transition hover:bg-neutral-50"
+      <div className="relative md:hidden">
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          aria-controls="mobile-category-menu"
+          aria-label={open ? "Close menu" : "Open menu"}
+          className="grid size-10 place-items-center rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] text-foreground transition hover:bg-[color:var(--background)]"
         >
-          All products
-        </Link>
-        {roots.map((root) => {
-          const children = categories.filter((category) => category.parentId === root.id);
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" className="size-5">
+            {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
+        </button>
 
-          return (
-            <div key={root.id} className="border-t border-neutral-100 pt-1 first:border-0">
+        {open ? (
+          <div
+            id="mobile-category-menu"
+            className="animate-slide-in absolute right-0 top-full z-40 mt-3 w-60 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-2 shadow-lg"
+          >
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="block rounded-[10px] px-3 py-2 text-sm font-medium text-foreground transition hover:bg-[color:var(--background)]"
+            >
+              Home
+            </Link>
+            <Link
+              href="/products"
+              onClick={() => setOpen(false)}
+              className="block rounded-[10px] px-3 py-2 text-sm font-medium text-foreground transition hover:bg-[color:var(--background)]"
+            >
+              All products
+            </Link>
+            <div className="my-1 border-t border-[color:var(--border)]" />
+            {links.map((link) => (
               <Link
-                href={`/products?category=${encodeURIComponent(root.id)}`}
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                key={link.label}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="block rounded-[10px] px-3 py-2 text-sm font-medium text-foreground transition hover:bg-[color:var(--background)] hover:text-[color:var(--primary)]"
               >
-                {root.name}
+                {link.label}
               </Link>
-              {children.map((child) => (
-                <Link
-                  key={child.id}
-                  href={`/products?category=${encodeURIComponent(child.id)}`}
-                  className="block rounded-lg py-1.5 pl-6 pr-3 text-xs text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-900"
-                >
-                  {child.name}
-                </Link>
-              ))}
-            </div>
-          );
-        })}
+            ))}
+          </div>
+        ) : null}
       </div>
-    </details>
+    </>
   );
 }

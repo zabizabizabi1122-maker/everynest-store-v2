@@ -91,7 +91,7 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
   }
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm">
       {attributes.length > 0 ? (
         <div className="space-y-5">
           {attributes.map((attribute) => {
@@ -99,7 +99,7 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
 
             return (
               <fieldset key={attribute.key}>
-                <legend className="text-sm font-semibold text-neutral-800">{attribute.label}</legend>
+                <legend className="text-sm font-semibold text-[color:var(--foreground)]">{attribute.label}</legend>
                 <div className="mt-2.5 flex flex-wrap gap-2" role="radiogroup" aria-label={attribute.label}>
                   {attribute.options.map((option) => {
                     const chosen = selection[attribute.key] === option;
@@ -113,10 +113,10 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
                         aria-checked={chosen}
                         disabled={!enabled}
                         onClick={() => choose(attribute.key, option)}
-                        className={`min-w-12 rounded-xl border px-3.5 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-40 ${
+                        className={`min-w-12 rounded-[10px] border px-3.5 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] disabled:cursor-not-allowed disabled:opacity-40 ${
                           chosen
-                            ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white"
-                            : "border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50"
+                            ? "border-[color:var(--primary)] bg-[color:var(--primary)] text-white"
+                            : "border-[color:var(--border)] bg-[color:var(--surface)] text-foreground hover:border-[color:var(--primary)] hover:bg-[color:var(--background)]"
                         }`}
                       >
                         {option}
@@ -130,15 +130,15 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
         </div>
       ) : null}
 
-      <div className="mt-6 border-t border-neutral-200 pt-5">
+      <div className="mt-6 border-t border-[color:var(--border)] pt-5">
         {matchedVariant ? (
           <>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="text-2xl font-bold text-[color:var(--brand)]">
+              <span className="text-2xl font-bold text-[color:var(--primary)]">
                 {formatPkr(displayPricePaisa(matchedVariant))}
               </span>
               {matchedVariant.salePricePaisa !== null ? (
-                <span className="text-sm text-neutral-400 line-through">
+                <span className="text-sm text-[color:var(--muted)] line-through">
                   {formatPkr(matchedVariant.pricePaisa)}
                 </span>
               ) : null}
@@ -146,10 +146,10 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
             <p className={`mt-1.5 text-sm font-medium ${availability.tone === "out" ? "text-red-700" : availability.tone === "low" ? "text-amber-700" : "text-emerald-700"}`}>
               {availability.label}
             </p>
-            <p className="mt-1 text-xs text-neutral-500">SKU: {matchedVariant.sku}</p>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">SKU: {matchedVariant.sku}</p>
           </>
         ) : (
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-[color:var(--muted)]">
             {variants.length === 0
               ? "No active variants are available for this product."
               : "Choose an option above to see the price and availability."}
@@ -158,13 +158,13 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
       </div>
 
       <div className="mt-5 flex items-center gap-3">
-        <div className="inline-flex items-center rounded-xl border border-neutral-300">
+        <div className="inline-flex items-center rounded-[10px] border border-[color:var(--border)]">
           <button
             type="button"
             onClick={() => setQuantity((current) => Math.max(1, current - 1))}
             disabled={quantity <= 1}
             aria-label="Decrease quantity"
-            className="px-3 py-2.5 text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="px-3 py-2.5 text-[color:var(--muted)] transition hover:bg-[color:var(--background)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             −
           </button>
@@ -176,7 +176,7 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
             onClick={() => setQuantity((current) => Math.min(maxQuantity || MAX_CART_QUANTITY, current + 1))}
             disabled={maxQuantity > 0 && quantity >= maxQuantity}
             aria-label="Increase quantity"
-            className="px-3 py-2.5 text-neutral-600 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="px-3 py-2.5 text-[color:var(--muted)] transition hover:bg-[color:var(--background)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             +
           </button>
@@ -186,7 +186,7 @@ export function AddToCart({ productName, imageUrl, variants, schema }: AddToCart
           type="button"
           onClick={handleAdd}
           disabled={!canAdd}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[color:var(--brand)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--brand)]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-[10px] bg-[color:var(--primary)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" className="size-5">
             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />

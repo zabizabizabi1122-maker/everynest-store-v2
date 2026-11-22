@@ -51,11 +51,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     <div className="mx-auto w-full max-w-5xl px-6 py-12">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--brand)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--primary)]">
             Your account
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">My orders</h1>
-          <p className="mt-1.5 text-sm text-neutral-600">
+          <p className="mt-1.5 text-sm text-[color:var(--muted)]">
             Track deliveries, view invoices and cancel a pending order.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
             status === null
               ? "bg-[color:var(--brand)] text-white"
-              : "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+              : "border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] hover:bg-[color:var(--background)]"
           }`}
         >
           All orders
@@ -84,7 +84,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
               status === value
                 ? "bg-[color:var(--brand)] text-white"
-                : "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                : "border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] hover:bg-[color:var(--background)]"
             }`}
           >
             {orderStatusLabel(value)}
@@ -92,11 +92,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         ))}
       </nav>
 
-      <section className="mt-5 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <section className="mt-5 overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
         {result.orders.length === 0 ? (
           <div className="p-10 text-center">
             <h2 className="text-lg font-semibold">No orders here yet</h2>
-            <p className="mt-2 text-sm text-neutral-600">
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
               {status
                 ? "You do not have any orders with this status."
                 : "Place your first COD order and it will appear here."}
@@ -108,7 +108,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-xl text-left text-sm">
-              <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+              <thead className="border-b border-[color:var(--border)] bg-[color:var(--background)] text-xs uppercase tracking-wide text-[color:var(--muted)]">
                 <tr>
                   <th scope="col" className="px-5 py-3 font-semibold">Order</th>
                   <th scope="col" className="px-5 py-3 font-semibold">Placed</th>
@@ -120,11 +120,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {result.orders.map((order) => (
-                  <tr key={order.id} className="transition hover:bg-neutral-50">
-                    <td className="px-5 py-4 font-medium text-neutral-900">{order.orderNumber}</td>
-                    <td className="px-5 py-4 text-neutral-600">{formatOrderDate(order.createdAt)}</td>
-                    <td className="px-5 py-4 text-neutral-600">{order.itemCount}</td>
-                    <td className="px-5 py-4 font-semibold text-neutral-900">
+                  <tr key={order.id} className="transition hover:bg-[color:var(--background)]">
+                    <td className="px-5 py-4 font-medium text-[color:var(--foreground)]">{order.orderNumber}</td>
+                    <td className="px-5 py-4 text-[color:var(--muted)]">{formatOrderDate(order.createdAt)}</td>
+                    <td className="px-5 py-4 text-[color:var(--muted)]">{order.itemCount}</td>
+                    <td className="px-5 py-4 font-semibold text-[color:var(--foreground)]">
                       {formatOrderPaisa(order.totalPaisa)}
                     </td>
                     <td className="px-5 py-4">
@@ -133,7 +133,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     <td className="px-5 py-4 text-right">
                       <Link
                         href={`/orders/${order.id}`}
-                        className="font-medium text-[color:var(--brand)] hover:underline"
+                        className="font-medium text-[color:var(--primary)] hover:underline"
                       >
                         View invoice
                       </Link>
@@ -155,7 +155,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           >
             Previous
           </Link>
-          <span className="text-neutral-600">
+          <span className="text-[color:var(--muted)]">
             Page {page} of {pageCount} · {total} orders
           </span>
           <Link

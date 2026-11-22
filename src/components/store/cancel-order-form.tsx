@@ -33,7 +33,7 @@ export function CancelOrderForm({ orderId }: { orderId: string }) {
       <button
         type="submit"
         disabled={isPending}
-        className="mt-3 inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-800 transition hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-3 inline-flex items-center justify-center rounded-xl border border-rose-300 bg-[color:var(--surface)] px-4 py-2.5 text-sm font-semibold text-rose-800 transition hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending ? "Cancelling…" : "Cancel order"}
       </button>

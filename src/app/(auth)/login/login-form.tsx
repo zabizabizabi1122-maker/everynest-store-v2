@@ -70,7 +70,7 @@ export function LoginForm({ nextPath, notice }: LoginFormProps) {
         {isPending ? "Logging in…" : "Log in"}
       </button>
 
-      <p className="text-center text-xs text-neutral-500">
+      <p className="text-center text-xs text-[color:var(--muted)]">
         Sessions are stored in secure, httpOnly cookies.
       </p>
     </form>

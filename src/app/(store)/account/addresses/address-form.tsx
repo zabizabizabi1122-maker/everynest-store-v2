@@ -22,9 +22,9 @@ export function AddressForm() {
   const errorFor = (name: string) => state.fieldErrors[name]?.[0];
 
   return (
-    <form action={formAction} noValidate className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h2 className="text-base font-semibold text-neutral-900">Add an address</h2>
-      <p className="mt-1 text-xs text-neutral-500">
+    <form action={formAction} noValidate className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <h2 className="text-base font-semibold text-[color:var(--foreground)]">Add an address</h2>
+      <p className="mt-1 text-xs text-[color:var(--muted)]">
         Your first address becomes the default used to prefill checkout.
       </p>
 
