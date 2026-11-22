@@ -1,81 +1,38 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Level 12 end-to-end flow:
- *   sign in/sign up → browse → select a variant → add to cart
- *   → place a COD order → staff sees the order in /admin/orders
+ * End-to-end flow after the guest-checkout change:
+ *   browse → select a variant → add to cart → place a COD order without an
+ *   account → admin sees and verifies the order in /admin/orders
  *
  * Environment:
- *   E2E_CUSTOMER_EMAIL / E2E_CUSTOMER_PASSWORD  pre-confirmed customer account
- *   E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD        staff/admin account
- *   (when customer credentials are absent the test signs up a fresh account;
- *   email confirmation or rate limits may require pre-created credentials)
+ *   E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD  staff/admin account
  *
  * Run against a DISPOSABLE test Supabase project only. The test places a real
  * order and reduces stock; clean up the fixtures afterwards.
  */
 
-async function signIn(page: Page, email: string, password: string): Promise<void> {
+async function signInAdmin(page: Page, email: string, password: string): Promise<void> {
   await page.goto("/login");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Log in" }).click();
+  await page.getByRole("button", { name: /sign in to admin/i }).click();
   await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 });
+  await expect(page).toHaveURL(/\/admin/, { timeout: 20_000 });
 }
 
-async function signUpCustomer(page: Page): Promise<void> {
-  const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-  const email = `e2e-${suffix}@example.test`;
-  const password = `E2eTest${suffix.slice(-6)}a1`;
-
-  await page.goto("/signup");
-  await page.getByLabel("Full name").fill("E2E Shopper");
-  await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Mobile number (optional)").fill("03001234567");
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByLabel("Confirm password").fill(password);
-  await page.getByRole("button", { name: "Create account" }).click();
-
-  const confirmationPrompt = page.getByText(
-    /check your email|confirmation link|verify your email/i,
-  );
-  const accountLink = page.getByRole("link", { name: /my orders/i });
-  await expect(confirmationPrompt.or(accountLink)).toBeVisible({
-    timeout: 20_000,
-  });
-  if (await confirmationPrompt.isVisible()) {
-    test.skip(
-      true,
-      "Email confirmation is enabled; set E2E_CUSTOMER_EMAIL/PASSWORD to a pre-confirmed test account.",
-    );
-  }
-}
-
-test("customer places a COD order that staff can see", async ({
-  page,
-  browser,
-}) => {
-  const customerEmail = process.env.E2E_CUSTOMER_EMAIL;
-  const customerPassword = process.env.E2E_CUSTOMER_PASSWORD;
+test("guest places a COD order that admin can verify", async ({ page, browser }) => {
   const adminEmail = process.env.E2E_ADMIN_EMAIL;
   const adminPassword = process.env.E2E_ADMIN_PASSWORD;
 
-  // 1. Authenticate as a customer (or create a fresh one).
-  if (customerEmail && customerPassword) {
-    await signIn(page, customerEmail, customerPassword);
-  } else {
-    await signUpCustomer(page);
-  }
-  await expect(page).toHaveURL(/\/account|\/$/);
-
-  // 2. Browse the catalogue and open the first product.
+  // 1. Browse the catalogue as a guest — no sign-in or sign-up step exists.
   await page.goto("/products");
   const firstProduct = page.locator('a[href^="/products/"]').first();
   await expect(firstProduct).toBeVisible();
   await firstProduct.click();
   await expect(page).toHaveURL(/\/products\/[a-z0-9-]+/);
 
-  // 3. Select every variant attribute, then add to cart. The product page is
+  // 2. Select every variant attribute, then add to cart. The product page is
   // streamed, so wait for the interactive panel before counting the groups.
   const addButton = page.getByRole("button", { name: /add to cart/i });
   await expect(addButton).toBeVisible();
@@ -87,7 +44,7 @@ test("customer places a COD order that staff can see", async ({
   await expect(addButton).toBeEnabled();
   await addButton.click();
 
-  // 4. Continue to checkout. Adding an item opens the drawer automatically;
+  // 3. Continue to checkout. Adding an item opens the drawer automatically;
   // click the header button only when it is not already open.
   const cartDialog = page.getByRole("dialog");
   if ((await cartDialog.count()) === 0) {
@@ -95,39 +52,58 @@ test("customer places a COD order that staff can see", async ({
   }
   await cartDialog.getByRole("link", { name: /checkout/i }).click();
   await expect(page).toHaveURL(/\/checkout/);
+  await expect(page.getByText(/no account needed/i)).toBeVisible();
 
-  // 5. Fill delivery details and place the COD order.
+  // 4. Fill the guest delivery and verification details, then submit.
   await page.getByLabel(/full name/i).fill("E2E Shopper");
   await page.getByLabel(/mobile number/i).fill("03001234567");
+  await page.getByLabel(/email address/i).fill("e2e-shopper@example.test");
   await page.getByLabel(/city/i).fill("Lahore");
-  await page.getByLabel(/address/i).fill("12 E2E Test Street, Garden Town");
-  await page.getByRole("button", { name: /place order/i }).click();
+  await page.getByLabel(/delivery address/i).fill("12 E2E Test Street, Garden Town");
+  await page.getByLabel(/product specifications/i).fill("E2E required size: M");
+  await page.getByLabel(/order notes/i).fill("Leave with the guard.");
+  await page.getByRole("button", { name: /submit order/i }).click();
 
-  // 6. Capture the order number from the confirmation panel.
+  // 5. Confirmation: exact admin-verification message and a pending order id.
   await expect(
-    page.getByRole("heading", { name: /order confirmed/i }),
+    page.getByRole("heading", { name: /order received/i }),
   ).toBeVisible({ timeout: 30_000 });
-  const orderNumber = (
-    await page.locator("dl dd").first().textContent()
-  )?.trim();
+  await expect(
+    page.getByText(
+      "Your order has been received successfully. Our Admin team will contact you through your provided phone number or email to verify your order.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByText(/pending admin verification/i)).toBeVisible();
+  const orderNumber = (await page.locator("dl dd").first().textContent())?.trim();
   expect(orderNumber).toBeTruthy();
 
-  // 7. Verify staff visibility in a separate session.
+  // 6. No customer order-tracking page exists — only admin can verify.
+  const customerOrders = await page.request.get("/orders");
+  expect([404, 307, 308]).toContain(customerOrders.status());
+
+  // 7. Verify admin visibility and contact shortcuts in a separate session.
   if (!adminEmail || !adminPassword) {
     test.skip(
       true,
       "Set E2E_ADMIN_EMAIL/PASSWORD to verify staff order visibility.",
     );
-    // test.skip throws at runtime; this keeps TypeScript's control-flow narrow.
     return;
   }
   const adminPage = await browser.newPage();
   try {
-    await signIn(adminPage, adminEmail, adminPassword);
+    await signInAdmin(adminPage, adminEmail, adminPassword);
     await adminPage.goto("/admin/orders");
+    await adminPage.getByRole("searchbox", { name: /search orders/i }).fill(orderNumber!);
+    await adminPage.getByRole("button", { name: /search/i }).click();
     await expect(
       adminPage.getByText(orderNumber!, { exact: false }).first(),
     ).toBeVisible({ timeout: 20_000 });
+
+    const orderRow = adminPage.getByRole("row").filter({ hasText: orderNumber! });
+    await orderRow.getByRole("link", { name: /manage/i }).click();
+    await expect(adminPage.getByText(/contact customer/i)).toBeVisible();
+    await expect(adminPage.getByText("e2e-shopper@example.test")).toBeVisible();
+    await expect(adminPage.getByText("E2E required size: M")).toBeVisible();
   } finally {
     await adminPage.close();
   }

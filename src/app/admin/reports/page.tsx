@@ -74,7 +74,7 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
         <StatCard
           label="Total sales"
           value={formatDecimalPaisa(report.totalSalesPaisa)}
-          hint="Confirmed, shipped and delivered orders"
+          hint="Verified, processing, shipped and delivered orders"
         />
         <StatCard
           label="Total orders"
@@ -83,7 +83,13 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
         />
         <StatCard
           label="Live orders"
-          value={String(report.statusCounts.confirmed + report.statusCounts.shipped + report.statusCounts.delivered)}
+          value={String(
+            report.statusCounts.contacted +
+              report.statusCounts.verified +
+              report.statusCounts.processing +
+              report.statusCounts.shipped +
+              report.statusCounts.delivered,
+          )}
           hint={`${report.statusCounts.delivered} delivered`}
         />
         <StatCard

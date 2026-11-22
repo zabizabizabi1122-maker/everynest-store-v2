@@ -33,8 +33,11 @@ const validInput = {
   items: [{ variantId: VARIANT_A, quantity: 2 }],
   customerName: "  Ayesha Khan  ",
   phone: "0300 1234567",
+  email: "  Ayesha@Example.com ",
   city: " Lahore ",
   address: "  12 Main Street, Gulberg  ",
+  requirements: "  Size M, blue colour  ",
+  notes: "",
 };
 
 describe("checkoutInputSchema", () => {
@@ -45,13 +48,19 @@ describe("checkoutInputSchema", () => {
     expect(result.city).toBe("Lahore");
     expect(result.address).toBe("12 Main Street, Gulberg");
     expect(result.phone).toBe("+923001234567");
+    expect(result.email).toBe("Ayesha@Example.com");
+    expect(result.requirements).toBe("Size M, blue colour");
+    expect(result.notes).toBe("");
   });
 
-  it("rejects a short address, bad phone and empty cart", () => {
+  it("rejects a short address, bad phone, bad email and empty cart", () => {
     expect(
       checkoutInputSchema.safeParse({ ...validInput, address: "Too short" }).success,
     ).toBe(false);
     expect(checkoutInputSchema.safeParse({ ...validInput, phone: "0211234567" }).success).toBe(
+      false,
+    );
+    expect(checkoutInputSchema.safeParse({ ...validInput, email: "not-an-email" }).success).toBe(
       false,
     );
     expect(checkoutInputSchema.safeParse({ ...validInput, items: [] }).success).toBe(false);
@@ -113,7 +122,7 @@ describe("describeCheckoutError", () => {
   it("maps known database codes without exposing SQL text", () => {
     expect(describeCheckoutError("P0001")).toContain("stock");
     expect(describeCheckoutError("P0003")).toContain("different details");
-    expect(describeCheckoutError("42501")).toContain("log in");
+    expect(describeCheckoutError("42501")).toContain("verify this order");
     expect(describeCheckoutError(undefined)).toBe(
       "Your order could not be placed right now. Please try again.",
     );
@@ -145,9 +154,21 @@ describe("placeOrderResultSchema", () => {
     totalPaisa: "309800",
     customerName: "Ayesha Khan",
     phone: "+923001234567",
+    email: "ayesha@example.com",
     address: "12 Main Street, Gulberg",
     city: "Lahore",
+    requirements: "Size M, blue colour",
+    notes: null,
     createdAt: "2026-11-20T12:00:00Z",
+    items: [
+      {
+        productName: "Cotton Shirt",
+        variantLabel: "size: M",
+        quantity: 2,
+        pricePaisa: 129950,
+        lineTotalPaisa: "259900",
+      },
+    ],
   };
 
   it("accepts decimal-string bigints from the RPC", () => {
@@ -155,8 +176,9 @@ describe("placeOrderResultSchema", () => {
     expect(formatDecimalPaisa(result.totalPaisa)).toBe("Rs. 3,098");
   });
 
-  it("rejects numeric totals and malformed order numbers", () => {
+  it("rejects numeric totals, missing items and malformed order numbers", () => {
     expect(placeOrderResultSchema.safeParse({ ...result, totalPaisa: 309800 }).success).toBe(false);
     expect(placeOrderResultSchema.safeParse({ ...result, orderNumber: "1" }).success).toBe(false);
+    expect(placeOrderResultSchema.safeParse({ ...result, items: [] }).success).toBe(false);
   });
 });

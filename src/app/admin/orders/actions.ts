@@ -69,7 +69,6 @@ export async function transitionOrderStatusAction(
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${result.data.id}`);
-  revalidatePath(`/orders/${result.data.id}`);
   revalidatePath("/admin/inventory");
   revalidatePath("/products");
 

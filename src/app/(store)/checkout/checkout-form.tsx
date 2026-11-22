@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
-import { CouponField } from "@/components/store/coupon-field";
 import {
   Field,
   FormMessage,
@@ -22,45 +21,30 @@ import {
   formatDecimalPaisa,
   initialCheckoutState,
 } from "@/lib/checkout";
-import { estimateCouponDiscountPaisa, type CouponTerms } from "@/lib/coupons";
 import { formatPkr } from "@/lib/money";
+import { orderStatusLabel } from "@/lib/orders";
 
 import { placeOrderAction } from "./actions";
 
-interface CheckoutFormProps {
-  defaultFullName: string;
-  defaultPhone: string;
-  defaultCity?: string;
-  defaultAddress?: string;
-}
-
 /**
- * COD checkout form. Cart contents are rendered from the non-authoritative
+ * Guest COD order form. Cart contents are rendered from the non-authoritative
  * client store; only variant ids and quantities are submitted. The Server
  * Action revalidates every line in `public.place_order`.
  */
-export function CheckoutForm({
-  defaultFullName,
-  defaultPhone,
-  defaultCity = "",
-  defaultAddress = "",
-}: CheckoutFormProps) {
+export function CheckoutForm() {
   const { items, count, clear } = useCart();
   const [state, formAction, isPending] = useActionState(placeOrderAction, initialCheckoutState);
-  const [coupon, setCoupon] = useState<{ code: string; terms: CouponTerms } | null>(null);
   const keyInput = useRef<HTMLInputElement>(null);
   const itemsInput = useRef<HTMLInputElement>(null);
   const clearedOrder = useRef<string | null>(null);
 
   const totals = estimateCheckoutTotals(items);
-  const couponDiscount = coupon ? estimateCouponDiscountPaisa(totals.subtotal, coupon.terms) : 0n;
-  const estimatedTotal = totals.total - couponDiscount;
   const orderId = state.order?.id ?? null;
 
   useEffect(() => {
     if (!orderId || clearedOrder.current === orderId) return;
 
-    // A confirmed order leaves the cart; a retry must use a fresh key.
+    // A received order leaves the cart; a retry must use a fresh key.
     clearedOrder.current = orderId;
     clear();
     if (keyInput.current) keyInput.current.value = "";
@@ -78,34 +62,63 @@ export function CheckoutForm({
   const errorFor = (name: string) => state.fieldErrors[name]?.[0];
 
   if (state.order) {
+    const order = state.order;
+
     return (
       <section
-        aria-labelledby="order-confirmed"
-        className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm"
+        aria-labelledby="order-received"
+        className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 text-center shadow-sm"
       >
-        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-sky-50 text-sky-700">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className="size-6">
             <path d="m5 13 4 4L19 7" />
           </svg>
         </span>
-        <h2 id="order-confirmed" className="mt-4 text-xl font-semibold text-emerald-900">
-          Order confirmed
+        <h2 id="order-received" className="mt-4 text-xl font-semibold text-[color:var(--foreground)]">
+          Order received
         </h2>
-        <p className="mt-2 text-sm text-emerald-800">{state.message}</p>
-        <dl className="mx-auto mt-5 max-w-sm divide-y divide-emerald-200 text-sm">
+        <p className="mx-auto mt-2 max-w-xl text-sm text-[color:var(--muted)]">{state.message}</p>
+
+        <dl className="mx-auto mt-5 max-w-md divide-y divide-[color:var(--border)] text-left text-sm">
           <div className="flex items-center justify-between gap-4 py-2">
-            <dt className="text-emerald-800">Order number</dt>
-            <dd className="font-semibold text-emerald-900">{state.order.orderNumber}</dd>
+            <dt className="text-[color:var(--muted)]">Order ID</dt>
+            <dd className="font-semibold text-[color:var(--foreground)]">{order.orderNumber}</dd>
           </div>
           <div className="flex items-center justify-between gap-4 py-2">
-            <dt className="text-emerald-800">Total</dt>
-            <dd className="font-semibold text-emerald-900">
-              {formatDecimalPaisa(state.order.totalPaisa)}
+            <dt className="text-[color:var(--muted)]">Customer</dt>
+            <dd className="font-semibold text-[color:var(--foreground)]">{order.customerName}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4 py-2">
+            <dt className="text-[color:var(--muted)]">Status</dt>
+            <dd className="font-semibold text-amber-700">{orderStatusLabel(order.status)}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4 py-2">
+            <dt className="text-[color:var(--muted)]">Total</dt>
+            <dd className="font-semibold text-[color:var(--foreground)]">
+              {formatDecimalPaisa(order.totalPaisa)}
             </dd>
           </div>
         </dl>
-        <p className="mt-4 text-xs text-emerald-800">
-          Keep this number for your records. Payment is collected on delivery.
+
+        <div className="mx-auto mt-4 max-w-md rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-4 text-left">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--muted)]">
+            Ordered items
+          </p>
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {order.items.map((item, index) => (
+              <li key={`${item.productName}-${index}`} className="flex justify-between gap-3">
+                <span className="text-[color:var(--foreground)]">
+                  {item.productName}
+                  <span className="ml-1 text-[color:var(--muted)]">({item.variantLabel})</span>
+                </span>
+                <span className="shrink-0 font-medium text-[color:var(--foreground)]">Qty {item.quantity}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="mt-4 text-xs text-[color:var(--muted)]">
+          Your order is pending admin verification. Payment is collected on delivery.
         </p>
         <Link href="/products" className={`${primaryButtonClass} mt-6`}>
           Continue shopping
@@ -119,7 +132,7 @@ export function CheckoutForm({
       <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-8 text-center shadow-sm">
         <h2 className="text-lg font-semibold">Your cart is empty</h2>
         <p className="mt-2 text-sm text-[color:var(--muted)]">
-          Add a product to your cart before checking out.
+          Add a product to your cart before placing an order.
         </p>
         <Link href="/products" className={`${primaryButtonClass} mt-6`}>
           Browse products
@@ -138,9 +151,8 @@ export function CheckoutForm({
       >
         <input ref={keyInput} type="hidden" name="idempotencyKey" defaultValue="" />
         <input ref={itemsInput} type="hidden" name="items" defaultValue="[]" />
-        <input type="hidden" name="couponCode" value={coupon?.code ?? ""} />
 
-        <h2 className="text-lg font-semibold">Delivery details</h2>
+        <h2 className="text-lg font-semibold">Your details</h2>
         <p className="mt-1 text-sm text-[color:var(--muted)]">
           We deliver across Pakistan. Cash on delivery only — no card is required.
         </p>
@@ -157,7 +169,7 @@ export function CheckoutForm({
               required
               minLength={2}
               maxLength={100}
-              defaultValue={state.values?.customerName ?? defaultFullName}
+              defaultValue={state.values?.customerName ?? ""}
               aria-invalid={Boolean(errorFor("customerName"))}
               aria-describedby={fieldDescribedBy("customerName", errorFor("customerName"))}
               className={inputClass}
@@ -178,9 +190,28 @@ export function CheckoutForm({
               inputMode="tel"
               required
               maxLength={32}
-              defaultValue={state.values?.phone ?? defaultPhone}
+              defaultValue={state.values?.phone ?? ""}
               aria-invalid={Boolean(errorFor("phone"))}
               aria-describedby={fieldDescribedBy("phone", errorFor("phone"), "phone-hint")}
+              className={inputClass}
+            />
+          </Field>
+
+          <Field
+            id="email"
+            label="Email address (optional)"
+            hint="Recommended so our admin team can email your verification details."
+            error={errorFor("email")}
+          >
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              maxLength={254}
+              defaultValue={state.values?.email ?? ""}
+              aria-invalid={Boolean(errorFor("email"))}
+              aria-describedby={fieldDescribedBy("email", errorFor("email"), "email-hint")}
               className={inputClass}
             />
           </Field>
@@ -194,7 +225,7 @@ export function CheckoutForm({
               required
               minLength={2}
               maxLength={100}
-              defaultValue={state.values?.city ?? defaultCity}
+              defaultValue={state.values?.city ?? ""}
               aria-invalid={Boolean(errorFor("city"))}
               aria-describedby={fieldDescribedBy("city", errorFor("city"))}
               className={inputClass}
@@ -214,9 +245,40 @@ export function CheckoutForm({
               required
               minLength={10}
               maxLength={500}
-              defaultValue={state.values?.address ?? defaultAddress}
+              defaultValue={state.values?.address ?? ""}
               aria-invalid={Boolean(errorFor("address"))}
               aria-describedby={fieldDescribedBy("address", errorFor("address"), "address-hint")}
+              className={inputClass}
+            />
+          </Field>
+
+          <Field
+            id="requirements"
+            label="Product specifications / requirements (optional)"
+            hint="Size, colour, or any special instruction for your selected product."
+            error={errorFor("requirements")}
+          >
+            <textarea
+              id="requirements"
+              name="requirements"
+              rows={3}
+              maxLength={1000}
+              defaultValue={state.values?.requirements ?? ""}
+              aria-invalid={Boolean(errorFor("requirements"))}
+              aria-describedby={fieldDescribedBy("requirements", errorFor("requirements"), "requirements-hint")}
+              className={inputClass}
+            />
+          </Field>
+
+          <Field id="notes" label="Order notes (optional)" error={errorFor("notes")}>
+            <textarea
+              id="notes"
+              name="notes"
+              rows={2}
+              maxLength={2000}
+              defaultValue={state.values?.notes ?? ""}
+              aria-invalid={Boolean(errorFor("notes"))}
+              aria-describedby={fieldDescribedBy("notes", errorFor("notes"))}
               className={inputClass}
             />
           </Field>
@@ -235,14 +297,14 @@ export function CheckoutForm({
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button type="submit" className={primaryButtonClass} disabled={isPending}>
-            {isPending ? "Placing order…" : `Place order · ${formatPkr(estimatedTotal)}`}
+            {isPending ? "Submitting order…" : `Submit order · ${formatPkr(totals.total)}`}
           </button>
           <Link href="/cart" className={secondaryButtonClass}>
             Back to cart
           </Link>
         </div>
         <p className="mt-3 text-xs text-[color:var(--muted)]">
-          Final prices and stock are confirmed when the order is placed. No payment is taken online.
+          Submitting does not confirm the order. Our admin team will contact you to verify it first.
         </p>
       </form>
 
@@ -254,10 +316,6 @@ export function CheckoutForm({
           <span className="text-xs text-[color:var(--muted)]">
             {count} {count === 1 ? "item" : "items"}
           </span>
-        </div>
-
-        <div className="mt-4">
-          <CouponField onValidated={setCoupon} />
         </div>
 
         <ul className="mt-4 divide-y divide-neutral-100">
@@ -293,19 +351,13 @@ export function CheckoutForm({
             <dt className="text-[color:var(--muted)]">Shipping</dt>
             <dd className="text-emerald-700">Free</dd>
           </div>
-          <div className="flex justify-between gap-4">
-            <dt className="text-[color:var(--muted)]">Discount</dt>
-            <dd className={couponDiscount > 0n ? "text-emerald-700" : undefined}>
-              {coupon && couponDiscount > 0n ? `− ${formatPkr(couponDiscount)}` : formatPkr(0n)}
-            </dd>
-          </div>
           <div className="flex justify-between gap-4 border-t border-[color:var(--border)] pt-3 text-base font-semibold">
             <dt>Estimated total</dt>
-            <dd>{formatPkr(estimatedTotal)}</dd>
+            <dd>{formatPkr(totals.total)}</dd>
           </div>
         </dl>
         <p className="mt-3 text-xs text-[color:var(--muted)]">
-          Estimated from your cart snapshot. The confirmed total appears after you place the order.
+          Estimated from your cart snapshot. The final total is recorded when the order is submitted.
         </p>
       </aside>
     </div>

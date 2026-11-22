@@ -161,17 +161,17 @@ describe("profileUpdateSchema", () => {
 
 describe("safeNextPath", () => {
   it("keeps same-site paths", () => {
-    expect(safeNextPath("/account")).toBe("/account");
-    expect(safeNextPath("/orders/123?tab=items")).toBe("/orders/123?tab=items");
+    expect(safeNextPath("/admin")).toBe("/admin");
+    expect(safeNextPath("/admin/orders/123?tab=items")).toBe("/admin/orders/123?tab=items");
   });
 
   it("rejects absolute, protocol-relative and backslash tricks", () => {
-    expect(safeNextPath("https://evil.example")).toBe("/account");
-    expect(safeNextPath("//evil.example")).toBe("/account");
-    expect(safeNextPath("/\\evil.example")).toBe("/account");
-    expect(safeNextPath("javascript:alert(1)")).toBe("/account");
-    expect(safeNextPath("")).toBe("/account");
-    expect(safeNextPath(null)).toBe("/account");
+    expect(safeNextPath("https://evil.example")).toBe("/admin");
+    expect(safeNextPath("//evil.example")).toBe("/admin");
+    expect(safeNextPath("/\\evil.example")).toBe("/admin");
+    expect(safeNextPath("javascript:alert(1)")).toBe("/admin");
+    expect(safeNextPath("")).toBe("/admin");
+    expect(safeNextPath(null)).toBe("/admin");
   });
 
   it("uses a caller-supplied fallback", () => {

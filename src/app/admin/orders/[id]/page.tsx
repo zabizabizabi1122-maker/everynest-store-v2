@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { OrderContactLinks } from "@/components/admin/order-contact-links";
 import { OrderTransitionForm } from "@/components/admin/order-transition-form";
 import { secondaryButtonClass } from "@/components/ui/form";
 import { OrderStatusBadge } from "@/components/ui/order-status";
@@ -116,6 +117,12 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
                 <dd className="font-medium text-neutral-900">{order.phone}</dd>
               </div>
               <div>
+                <dt className="text-neutral-500">Email</dt>
+                <dd className="break-all font-medium text-neutral-900">
+                  {order.email?.trim() || "Not provided"}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-neutral-500">City</dt>
                 <dd className="font-medium text-neutral-900">{order.city}</dd>
               </div>
@@ -123,7 +130,38 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
                 <dt className="text-neutral-500">Address</dt>
                 <dd className="font-medium text-neutral-900">{order.address}</dd>
               </div>
+              {order.requirements?.trim() ? (
+                <div>
+                  <dt className="text-neutral-500">Product requirements</dt>
+                  <dd className="whitespace-pre-line font-medium text-neutral-900">
+                    {order.requirements}
+                  </dd>
+                </div>
+              ) : null}
+              {order.notes?.trim() ? (
+                <div>
+                  <dt className="text-neutral-500">Order notes</dt>
+                  <dd className="whitespace-pre-line font-medium text-neutral-900">
+                    {order.notes}
+                  </dd>
+                </div>
+              ) : null}
             </dl>
+          </section>
+
+          <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-neutral-900">Contact customer</h2>
+            <p className="mt-1 text-xs text-neutral-500">
+              Reach out to verify order details before fulfilment.
+            </p>
+            <OrderContactLinks
+              phone={order.phone}
+              email={order.email ?? null}
+              orderNumber={order.orderNumber}
+              customerName={order.customerName}
+              firstItemName={order.items[0]?.productName ?? "your order"}
+              quantity={order.items[0]?.quantity ?? 1}
+            />
           </section>
         </aside>
       </div>

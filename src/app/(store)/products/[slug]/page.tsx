@@ -6,14 +6,11 @@ import { AddToCart } from "@/components/store/add-to-cart";
 import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductCard } from "@/components/store/product-card";
 import { ProductReviews } from "@/components/store/product-reviews";
-import { ReviewForm } from "@/components/store/review-form";
-import { WishlistToggle } from "@/components/store/wishlist-toggle";
 import { loadProductBySlug } from "@/lib/catalog";
 import { formatPkr } from "@/lib/money";
-import { isSignedIn, loadApprovedReviews } from "@/lib/review-data";
+import { loadApprovedReviews } from "@/lib/review-data";
 import { displayPricePaisa } from "@/lib/storefront";
 import { slugSchema } from "@/lib/validators";
-import { isWishlisted } from "@/lib/wishlist-data";
 
 export const metadata: Metadata = {
   title: "Product details · EveryNest",
@@ -31,11 +28,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!detail) notFound();
 
   const { product, category, schema, images, variants, related } = detail;
-  const [reviews, signedIn, wishlisted] = await Promise.all([
-    loadApprovedReviews(product.id),
-    isSignedIn(),
-    isWishlisted(product.id),
-  ]);
+  const reviews = await loadApprovedReviews(product.id);
   const galleryImages = images.map((image) => ({ url: image.url, altText: image.alt_text }));
   const prices = variants.map(displayPricePaisa);
   const minPrice = prices.length > 0 ? Math.min(...prices) : null;
@@ -110,19 +103,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             />
           </div>
 
-          {signedIn ? (
-            <div className="mt-3">
-              <WishlistToggle productId={product.id} initialSaved={wishlisted} />
-            </div>
-          ) : (
-            <p className="mt-3 text-xs text-[color:var(--muted)]">
-              <Link href="/login" className="font-medium text-[color:var(--primary)] hover:underline">
-                Sign in
-              </Link>{" "}
-              to save this product to your wishlist.
-            </p>
-          )}
-
           <ul className="mt-6 grid gap-3 text-sm text-[color:var(--muted)] sm:grid-cols-2">
             <li className="flex items-start gap-2.5 rounded-xl border border-[color:var(--border)] bg-[color:var(--background)] p-3">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-[color:var(--primary)]">
@@ -144,27 +124,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
 
       <ProductReviews reviews={reviews} />
-
-      {signedIn ? (
-        <section aria-labelledby="write-review-heading" className="mt-10">
-          <h2 id="write-review-heading" className="text-2xl font-semibold tracking-tight">
-            Share your experience
-          </h2>
-          <p className="mt-1 text-sm text-[color:var(--muted)]">
-            Reviews are linked to a delivered order and published after a quick check.
-          </p>
-          <div className="mt-5 max-w-2xl">
-            <ReviewForm productId={product.id} />
-          </div>
-        </section>
-      ) : (
-        <p className="mt-10 rounded-2xl border border-[color:var(--border)] bg-[color:var(--background)] p-5 text-sm text-[color:var(--muted)]">
-          <Link href="/login?next=/account" className="font-medium text-[color:var(--primary)] hover:underline">
-            Sign in
-          </Link>{" "}
-          to leave a review. You need a delivered order of this product.
-        </p>
-      )}
 
       {related.length > 0 ? (
         <section aria-labelledby="related-heading" className="mt-20">

@@ -35,7 +35,7 @@ export const getCurrentUser = cache(async () => {
  * `redirect()` is a control-flow helper: it throws, so TypeScript knows the
  * returned user is non-null after this call.
  */
-export async function requireUser(nextPath = "/account") {
+export async function requireUser(nextPath = "/login") {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -80,9 +80,9 @@ export async function getCurrentProfile(): Promise<Profile | null> {
  * Server-side guard for every admin page and admin Server Action.
  *
  * The role is read from `public.profiles` on each request — not from a cookie,
- * a JWT claim or form input. A signed-in customer who types `/admin` is sent
- * back to their account, and calling an admin action directly would hit the same
- * check. RLS and column grants remain the final layer underneath.
+ * a JWT claim or form input. A signed-in non-staff account that types `/admin`
+ * is sent back to the storefront, and calling an admin action directly would hit
+ * the same check. RLS and column grants remain the final layer underneath.
  *
  * `redirect()` throws, so callers get a non-null `profile`.
  */
@@ -91,7 +91,7 @@ export async function requireStaff(nextPath = "/admin") {
   const profile = await loadProfile(user.id);
 
   if (!profile || !canAccessAdmin(profile.role)) {
-    redirect("/account?notice=staff-only");
+    redirect("/?notice=staff-only");
   }
 
   return { user, profile };
@@ -106,7 +106,7 @@ export async function requireAdmin(nextPath = "/admin") {
   const { user, profile } = await requireStaff(nextPath);
 
   if (!isAdminRole(profile.role)) {
-    redirect("/admin?notice=admin-only");
+    redirect("/?notice=admin-only");
   }
 
   return { user, profile };

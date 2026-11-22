@@ -15,7 +15,9 @@ import { uuidSchema } from "@/lib/validators";
 
 export const ORDER_STATUSES = [
   "pending",
-  "confirmed",
+  "contacted",
+  "verified",
+  "processing",
   "shipped",
   "delivered",
   "cancelled",
@@ -23,7 +25,14 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
-export const ORDER_TRANSITION_TARGETS = ["confirmed", "shipped", "delivered", "cancelled"] as const;
+export const ORDER_TRANSITION_TARGETS = [
+  "contacted",
+  "verified",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
 
 const decimalPaisaSchema = z.string().regex(/^[0-9]+$/, "Expected a non-negative integer amount.");
 
@@ -72,8 +81,11 @@ export const orderDetailSchema = z
     totalPaisa: decimalPaisaSchema,
     customerName: z.string().min(1),
     phone: z.string().min(1),
+    email: z.string().nullable(),
     address: z.string().min(1),
     city: z.string().min(1),
+    requirements: z.string().nullable(),
+    notes: z.string().nullable(),
     createdAt: z.string().min(1),
     items: z.array(orderLineSchema),
   })
@@ -106,7 +118,9 @@ export const initialOrderState: OrderActionState = {
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: "Pending",
-  confirmed: "Confirmed",
+  contacted: "Contacted",
+  verified: "Verified",
+  processing: "Processing",
   shipped: "Shipped",
   delivered: "Delivered",
   cancelled: "Cancelled",
@@ -120,8 +134,12 @@ export function orderStatusTone(status: OrderStatus): string {
   switch (status) {
     case "pending":
       return "bg-amber-50 text-amber-700";
-    case "confirmed":
+    case "contacted":
+      return "bg-orange-50 text-orange-700";
+    case "verified":
       return "bg-sky-50 text-sky-700";
+    case "processing":
+      return "bg-violet-50 text-violet-700";
     case "shipped":
       return "bg-indigo-50 text-indigo-700";
     case "delivered":
@@ -131,17 +149,16 @@ export function orderStatusTone(status: OrderStatus): string {
   }
 }
 
-/** Statuses a customer may move an own order to. */
-export function customerTransitions(status: OrderStatus): TransitionTarget[] {
-  return status === "pending" ? ["cancelled"] : [];
-}
-
 /** Statuses a staff member may move an order to, based on the database rules. */
 export function staffTransitions(status: OrderStatus): TransitionTarget[] {
   switch (status) {
     case "pending":
-      return ["confirmed", "cancelled"];
-    case "confirmed":
+      return ["contacted", "cancelled"];
+    case "contacted":
+      return ["verified", "cancelled"];
+    case "verified":
+      return ["processing", "cancelled"];
+    case "processing":
       return ["shipped", "cancelled"];
     case "shipped":
       return ["delivered"];

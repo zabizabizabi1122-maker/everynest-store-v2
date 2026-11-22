@@ -4,6 +4,8 @@ A single-store, multi-category e-commerce application (clothes, stationery, shoe
 
 > The project rules and the strict level-by-level roadmap live in [`AGENTS.md`](./AGENTS.md). Read it before changing architecture, schema or security rules.
 
+> **Current checkout model (approved change):** Customers no longer create accounts. Signup, profile/address pages, wishlist, order history and customer review submission were removed. Guests browse and place COD orders directly; `/login` is **admin-only**; only staff/admin can view, search, contact and move orders through `pending → contacted → verified → processing → shipped → delivered` (or `cancelled`). New orders always start at `pending` and are never shown as confirmed. Some level notes below describe the superseded authenticated flow.
+
 ## Current status
 
 **Level 1 — Project setup and secure database foundation** is implemented:
@@ -22,17 +24,17 @@ database, and remote CLI commands target the linked project without needing an
 explicit `--remote` URL. The older Tokyo project `nvdwoihhksmqezzebube` is **not**
 used for this store.
 
-**Level 2 — Authentication** is implemented:
+**Level 2 — Authentication** (customer portion superseded by guest checkout):
 
-- Signup, login and logout with Supabase Auth (email + password)
-- Sessions stored in httpOnly cookies by `@supabase/ssr`; every server page and
+- Admin-only login and logout with Supabase Auth (email + password); a password
+  sign-in is rejected unless the user's `profiles.role` is `staff` or `admin`
+- Sessions stored in httpOnly cookies by `@supabase/ssr`; every admin page and
   action re-verifies the user with `auth.getUser()`
-- Profile auto-creation from the Level 1 trigger (role always `customer`)
-- `/account` page with protected access; customers can edit only full name and
-  phone (enforced again by column grants and RLS)
-- Server-side aod validation and safe, friendly auth error messages
-- email-confirmation callback at `/auth/callback`
-- Redirect protection against open redirects (`?next=` is validated)
+- The Level 1 signup trigger and `profiles.role` guard remain for admin accounts
+- Customer signup, `/account`, `/account/addresses`, `/wishlist`, `/orders`,
+  `/auth/callback` and customer review submission were removed
+- Server-side Zod validation and safe, friendly auth error messages
+- Redirect protection against open redirects (`?next=` is validated, default `/admin`)
 
 **Level 3 — Admin shell and access control** is implemented:
 
@@ -42,7 +44,7 @@ used for this store.
 - `proxy.ts` refreshes the session and sends signed-out visitors to login
 - `requireStaff()` re-verifies the session and reads `profiles.role` from the
   database on every admin request — never from a cookie or form value
-- A signed-in customer is redirected to `/account?notice=staff-only`, and the
+- A signed-in non-staff account is redirected to the storefront, and the
   database still blocks staff-only reads and admin-only writes
 - Dashboard now shows real figures (Level 10); no invented business statistics
 
@@ -343,23 +345,26 @@ Database tests:
   own-profile-only reads/updates, password login, rejected wrong password.
   **11/11 PASS** on `zabi-store-dev` (test user deleted afterwards).
 
-### Authentication flow (Level 2)
+### Guest checkout and admin sign-in
 
-1. `/signup` posts to a Server Action that validates with aod and calls
-   `supabase.auth.signUp` with `full_name`/`phone` metadata only.
-2. A database trigger (`public.handle_new_user`) inserts the profile row. Roles
-   are never accepted from client input.
-3. If email confirmation is enabled, Supabase sends a link to
-   `/auth/callback?code=...&next=/account`; the route handler exchanges the code
-   for a session in httpOnly cookies.
-4. `/account` calls `requireUser()` → `auth.getUser()` on every request. Row
-   Level Security and column grants still restrict reads and writes to the
-   caller's own `full_name`/`phone`.
-5. Sign out is a Server Action in the header that clears the session cookies.
+1. Guests browse products and add variants to a client-side cart. `/checkout`
+   needs no session.
+2. The form collects full name, phone, optional email, complete address, city,
+   selected items/quantities (from the cart), optional product specifications and
+   optional order notes. Zod validates it in the Server Action.
+3. `public.place_order` (callable by `anon`) revalidates everything, locks
+   variants, reads prices from the database, inserts the order and invoice lines,
+   reduces stock, and returns a pending order with its id.
+4. The confirmation panel shows the exact message: "Your order has been received
+   successfully. Our Admin team will contact you through your provided phone
+   number or email to verify your order." It shows the order id, product, quantity,
+   customer name and `pending` status. No order is presented as confirmed.
+5. `/login` is admin-only: after `signInWithPassword`, the action reads the user's
+   `profiles.role`; non-staff accounts are immediately signed out and rejected.
+   Sign out is a Server Action used by the admin shell.
 
-`proxy.ts` performs only preliminary redirects (`/account` when signed out,
-`/login` and `/signup` when signed in, `/admin` when signed out). It is not the
-authorization layer.
+`proxy.ts` performs only preliminary redirects (`/admin` when signed out,
+`/login` when already signed in). It is not the authorization layer.
 
 ### Admin area (Level 3)
 
@@ -367,8 +372,8 @@ authorization layer.
 - Three independent layers protect it:
   1. `proxy.ts` redirects signed-out visitors to `/login?next=%2Fadmin` (UX).
   2. `requireStaff()` in `app/admin/layout.tsx` calls `auth.getUser()` and reads
-     the caller's row from `public.profiles`. A signed-in customer is sent to
-     `/account?notice=staff-only` before any admin content renders.
+     the caller's row from `public.profiles`. A signed-in non-staff account is
+     sent to the storefront before any admin content renders.
   3. RLS and column grants still decide what the database returns. Staff can
      read staff tables; only admin can write suppliers; `audit_log` is admin-only.
 - The sidebar items for unbuilt levels are rendered as disabled rows with an

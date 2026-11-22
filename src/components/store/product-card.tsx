@@ -6,7 +6,6 @@ import { describeAvailability, type AvailabilityTone } from "@/lib/storefront";
 
 import { ProductImage } from "./product-image";
 import { QuickAddButton } from "./quick-add-button";
-import { WishlistToggle } from "./wishlist-toggle";
 
 const availabilityClass: Record<AvailabilityTone, string> = {
   in: "text-emerald-700",
@@ -51,10 +50,6 @@ export function ProductCard({
             Out of stock
           </span>
         ) : null}
-
-        <div className="absolute right-2.5 top-2.5">
-          <WishlistToggle productId={product.id} compact />
-        </div>
       </div>
 
       <div className="flex flex-1 flex-col p-3.5">

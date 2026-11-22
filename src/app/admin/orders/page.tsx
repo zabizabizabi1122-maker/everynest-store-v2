@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
 
-import { secondaryButtonClass } from "@/components/ui/form";
+import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/form";
 import { OrderStatusBadge } from "@/components/ui/order-status";
 import { requireStaff } from "@/lib/auth";
 import { ORDER_PAGE_SIZE, loadOrderList } from "@/lib/order-data";
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 interface AdminOrdersPageProps {
-  searchParams: Promise<{ page?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; status?: string; q?: string | string[] }>;
 }
 
 function parsePage(value: string | undefined): number {
@@ -29,9 +29,17 @@ function parsePage(value: string | undefined): number {
   return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, 10000) : 1;
 }
 
-function ordersHref(page: number, status: string | null): string {
+function parseSearch(value: string | string[] | undefined): string | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim().slice(0, 100);
+  return trimmed || null;
+}
+
+function ordersHref(page: number, status: string | null, search: string | null): string {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
+  if (search) params.set("q", search);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
   return query ? `/admin/orders?${query}` : "/admin/orders";
@@ -48,8 +56,9 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
   const statusResult = orderStatusSchema.safeParse(params.status);
   const status = statusResult.success ? statusResult.data : null;
   const page = parsePage(params.page);
+  const search = parseSearch(params.q);
 
-  const result = await loadOrderList({ page, status });
+  const result = await loadOrderList({ page, status, search });
   const total = Number(result.total);
   const pageCount = Math.max(1, Math.ceil(total / ORDER_PAGE_SIZE));
 
@@ -70,9 +79,38 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
         </Link>
       </header>
 
+      <form action="/admin/orders" method="get" className="mt-6 flex flex-wrap items-center gap-3">
+        {status ? <input type="hidden" name="status" value={status} /> : null}
+        <div className="min-w-64 flex-1">
+          <label htmlFor="order-search" className="sr-only">
+            Search orders
+          </label>
+          <input
+            id="order-search"
+            name="q"
+            type="search"
+            defaultValue={search ?? ""}
+            maxLength={100}
+            placeholder="Search order ID, customer name or phone"
+            className={inputClass}
+          />
+        </div>
+        <button type="submit" className={`${primaryButtonClass} mt-1.5`}>
+          Search
+        </button>
+        {search ? (
+          <Link
+            href={ordersHref(1, status, null)}
+            className="mt-1.5 text-sm font-medium text-neutral-600 hover:underline"
+          >
+            Clear search
+          </Link>
+        ) : null}
+      </form>
+
       <nav aria-label="Filter orders by status" className="mt-6 flex flex-wrap gap-2">
         <Link
-          href={ordersHref(1, null)}
+          href={ordersHref(1, null, search)}
           aria-current={status === null ? "page" : undefined}
           className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
             status === null
@@ -85,7 +123,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
         {ORDER_STATUSES.map((value) => (
           <Link
             key={value}
-            href={ordersHref(1, value)}
+            href={ordersHref(1, value, search)}
             aria-current={status === value ? "page" : undefined}
             className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
               status === value
@@ -101,7 +139,11 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
       <section className="mt-5 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
         {result.orders.length === 0 ? (
           <p className="p-10 text-center text-sm text-neutral-600">
-            {status ? "No orders with this status yet." : "No orders have been placed yet."}
+            {search
+              ? "No orders match your search."
+              : status
+                ? "No orders with this status yet."
+                : "No orders have been placed yet."}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -149,7 +191,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
       {pageCount > 1 ? (
         <nav aria-label="Orders pagination" className="mt-5 flex items-center justify-between gap-3 text-sm">
           <Link
-            href={ordersHref(Math.max(1, page - 1), status)}
+            href={ordersHref(Math.max(1, page - 1), status, search)}
             aria-disabled={page <= 1}
             className={`${secondaryButtonClass} ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
           >
@@ -159,7 +201,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
             Page {page} of {pageCount} · {total} orders
           </span>
           <Link
-            href={ordersHref(Math.min(pageCount, page + 1), status)}
+            href={ordersHref(Math.min(pageCount, page + 1), status, search)}
             aria-disabled={page >= pageCount}
             className={`${secondaryButtonClass} ${page >= pageCount ? "pointer-events-none opacity-50" : ""}`}
           >

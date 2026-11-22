@@ -267,16 +267,19 @@ export type Database = {
           created_at: string
           customer_name: string
           discount_paisa: number
+          email: string | null
           id: string
           idempotency_key: string
+          notes: string | null
           order_number: string
           phone: string
           request_fingerprint: string
+          requirements: string | null
           shipping_paisa: number
           status: string
           subtotal_paisa: number
           total_paisa: number
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           address: string
@@ -287,16 +290,19 @@ export type Database = {
           created_at?: string
           customer_name: string
           discount_paisa?: number
+          email?: string | null
           id?: string
           idempotency_key: string
+          notes?: string | null
           order_number: string
           phone: string
           request_fingerprint: string
+          requirements?: string | null
           shipping_paisa: number
           status?: string
           subtotal_paisa: number
           total_paisa: number
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           address?: string
@@ -307,16 +313,19 @@ export type Database = {
           created_at?: string
           customer_name?: string
           discount_paisa?: number
+          email?: string | null
           id?: string
           idempotency_key?: string
+          notes?: string | null
           order_number?: string
           phone?: string
           request_fingerprint?: string
+          requirements?: string | null
           shipping_paisa?: number
           status?: string
           subtotal_paisa?: number
           total_paisa?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -770,18 +779,25 @@ export type Database = {
       get_order: { Args: { p_order_id: string }; Returns: Json }
       get_reports_data: { Args: { p_days?: number }; Returns: Json }
       list_orders: {
-        Args: { p_page?: number; p_page_size?: number; p_status?: string }
+        Args: {
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_status?: string
+        }
         Returns: Json
       }
       place_order: {
         Args: {
           p_address: string
           p_city: string
-          p_coupon_code?: string
           p_customer_name: string
+          p_email?: string
           p_idempotency_key: string
           p_items: Json
+          p_notes?: string
           p_phone: string
+          p_requirements?: string
         }
         Returns: Json
       }

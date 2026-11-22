@@ -4,7 +4,6 @@ import {
   ORDER_STATUSES,
   ORDER_TRANSITION_TARGETS,
   ORDER_TRANSITION_TARGETS as targets,
-  customerTransitions,
   describeOrderError,
   formatOrderDate,
   formatOrderPaisa,
@@ -43,8 +42,11 @@ const detail = {
   totalPaisa: "150050",
   customerName: "Test Customer",
   phone: "+923001234567",
+  email: "test@example.com",
   address: "12 Main Street, Lahore",
   city: "Lahore",
+  requirements: "Size M",
+  notes: null,
   createdAt: "2026-11-20T10:00:00.000Z",
   items: [
     {
@@ -73,10 +75,10 @@ describe("order lifecycle contracts", () => {
 
   it("strictly validates transition input", () => {
     expect(
-      transitionInputSchema.safeParse({ orderId: ORDER_ID, targetStatus: "confirmed" }).success,
+      transitionInputSchema.safeParse({ orderId: ORDER_ID, targetStatus: "contacted" }).success,
     ).toBe(true);
     expect(
-      transitionInputSchema.safeParse({ orderId: "not-a-uuid", targetStatus: "confirmed" }).success,
+      transitionInputSchema.safeParse({ orderId: "not-a-uuid", targetStatus: "contacted" }).success,
     ).toBe(false);
     expect(
       transitionInputSchema.safeParse({ orderId: ORDER_ID, targetStatus: "pending" }).success,
@@ -84,7 +86,7 @@ describe("order lifecycle contracts", () => {
     expect(
       transitionInputSchema.safeParse({
         orderId: ORDER_ID,
-        targetStatus: "confirmed",
+        targetStatus: "contacted",
         actorId: ORDER_ID,
       }).success,
     ).toBe(false);
@@ -106,15 +108,11 @@ describe("order lifecycle contracts", () => {
     ).toBe(false);
   });
 
-  it("matches the database transition rules", () => {
-    expect(customerTransitions("pending")).toEqual(["cancelled"]);
-    expect(customerTransitions("confirmed")).toEqual([]);
-    expect(customerTransitions("shipped")).toEqual([]);
-    expect(customerTransitions("delivered")).toEqual([]);
-    expect(customerTransitions("cancelled")).toEqual([]);
-
-    expect(staffTransitions("pending")).toEqual(["confirmed", "cancelled"]);
-    expect(staffTransitions("confirmed")).toEqual(["shipped", "cancelled"]);
+  it("matches the admin-only database transition rules", () => {
+    expect(staffTransitions("pending")).toEqual(["contacted", "cancelled"]);
+    expect(staffTransitions("contacted")).toEqual(["verified", "cancelled"]);
+    expect(staffTransitions("verified")).toEqual(["processing", "cancelled"]);
+    expect(staffTransitions("processing")).toEqual(["shipped", "cancelled"]);
     expect(staffTransitions("shipped")).toEqual(["delivered"]);
     expect(staffTransitions("delivered")).toEqual([]);
     expect(staffTransitions("cancelled")).toEqual([]);

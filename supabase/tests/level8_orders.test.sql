@@ -7,8 +7,9 @@
 --   npx supabase test db
 --
 -- STATUS: NOT EXECUTED YET (no local Docker engine in this environment).
--- These assertions describe the intended Level 8 guarantees and must be run
--- against a local stack before the order layer is treated as verified.
+-- These assertions describe the intended guarantees after the guest-checkout
+-- migration and must be run against a local stack before the order layer is
+-- treated as verified.
 -- =============================================================================
 
 begin;
@@ -17,10 +18,11 @@ create extension if not exists pgtap with schema extensions;
 
 set local search_path = extensions, public, pg_catalog;
 
-select plan(18);
+select plan(20);
 
 -- -----------------------------------------------------------------------------
--- RLS coverage
+-- RLS coverage. Customer-owned order RLS was removed with customer accounts;
+-- only the staff SELECT policies remain.
 -- -----------------------------------------------------------------------------
 select is(
   (
@@ -37,14 +39,14 @@ select is(
 
 select is(
   (select count(*)::int from pg_policies where schemaname = 'public' and tablename = 'orders'),
-  2,
-  'orders has exactly the own-customer and staff SELECT policies'
+  1,
+  'orders has exactly the staff SELECT policy'
 );
 
 select is(
   (select count(*)::int from pg_policies where schemaname = 'public' and tablename = 'order_items'),
-  2,
-  'order_items has exactly the own-customer and staff SELECT policies'
+  1,
+  'order_items has exactly the staff SELECT policy'
 );
 
 -- -----------------------------------------------------------------------------
@@ -52,12 +54,12 @@ select is(
 -- -----------------------------------------------------------------------------
 select ok(
   not has_table_privilege('anon', 'public.orders', 'SELECT'),
-  'anon cannot read orders'
+  'anon cannot read orders directly'
 );
 
 select ok(
   not has_table_privilege('anon', 'public.order_items', 'SELECT'),
-  'anon cannot read order items'
+  'anon cannot read order items directly'
 );
 
 select ok(
@@ -81,24 +83,24 @@ select ok(
 );
 
 -- -----------------------------------------------------------------------------
--- RPC surface
+-- RPC surface. Checkout is now public; order management stays authenticated.
 -- -----------------------------------------------------------------------------
 select ok(
   has_function_privilege(
-    'authenticated',
-    'public.place_order(uuid, jsonb, text, text, text, text)',
+    'anon',
+    'public.place_order(uuid, jsonb, text, text, text, text, text, text, text)',
     'EXECUTE'
   ),
-  'authenticated can call place_order'
+  'anon can call place_order for guest checkout'
 );
 
 select ok(
-  not has_function_privilege(
-    'anon',
-    'public.place_order(uuid, jsonb, text, text, text, text)',
+  has_function_privilege(
+    'authenticated',
+    'public.place_order(uuid, jsonb, text, text, text, text, text, text, text)',
     'EXECUTE'
   ),
-  'anon cannot call place_order'
+  'authenticated can call place_order'
 );
 
 select ok(
@@ -134,9 +136,9 @@ select ok(
 select ok(
   exists (
     select 1 from pg_constraint
-    where conname = 'orders_customer_idempotency_unique'
+    where conname = 'orders_idempotency_unique'
   ),
-  'idempotency is unique per customer, not globally'
+  'idempotency is globally unique because guests have no user id'
 );
 
 select ok(
@@ -154,6 +156,29 @@ select ok(
     where conname = 'orders_status_check'
   ),
   'order status is constrained in the database'
+);
+
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'orders'
+      and column_name = 'user_id'
+      and is_nullable = 'YES'
+  ),
+  'orders.user_id is nullable for guest orders'
+);
+
+select is(
+  (
+    select count(*)::int
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'orders'
+      and column_name in ('email', 'requirements', 'notes')
+  ),
+  3,
+  'guest email, requirements and notes columns exist on orders'
 );
 
 select is(

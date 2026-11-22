@@ -61,7 +61,9 @@ describe("report payload validation", () => {
     totalOrders: 1,
     statusCounts: {
       pending: 0,
-      confirmed: 1,
+      contacted: 0,
+      verified: 1,
+      processing: 0,
       shipped: 0,
       delivered: 0,
       cancelled: 0,

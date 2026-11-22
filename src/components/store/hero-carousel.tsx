@@ -24,7 +24,7 @@ const SLIDES: HeroSlide[] = [
     image: "/products/canvas-backpack.jpg",
     imageAlt: "Everyday canvas backpack",
     primary: { label: "Shop all products", href: "/products" },
-    secondary: { label: "Create an account", href: "/signup" },
+    secondary: { label: "Browse catalogue", href: "/products" },
   },
   {
     eyebrow: "Style for every day",
@@ -44,7 +44,7 @@ const SLIDES: HeroSlide[] = [
     image: "/products/everyday-sneakers.jpg",
     imageAlt: "Everyday sneakers",
     primary: { label: "Shop the catalogue", href: "/products" },
-    secondary: { label: "My account", href: "/account" },
+    secondary: { label: "View cart", href: "/cart" },
   },
 ];
 

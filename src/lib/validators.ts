@@ -163,7 +163,7 @@ export const profileUpdateSchema = z.object({
  * Blocks protocol-relative (`//evil.com`), absolute URLs and backslash tricks
  * so a `?next=` parameter can never be used as an open redirect.
  */
-export function safeNextPath(value: string | null | undefined, fallback = "/account"): string {
+export function safeNextPath(value: string | null | undefined, fallback = "/admin"): string {
   if (!value) return fallback;
 
   const path = value.trim();

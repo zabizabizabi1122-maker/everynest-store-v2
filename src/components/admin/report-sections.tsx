@@ -29,7 +29,7 @@ export function SalesOverview({
     <section aria-labelledby="sales-overview" className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
       <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-neutral-200 px-5 py-4">
         <h2 id="sales-overview" className="text-base font-semibold">Sales overview</h2>
-        <p className="text-xs text-neutral-500">Confirmed, shipped and delivered orders · {timezone} days</p>
+        <p className="text-xs text-neutral-500">Verified, processing, shipped and delivered orders · {timezone} days</p>
       </header>
 
       <div className={`space-y-3 p-5 ${compact ? "max-h-72 overflow-y-auto" : ""}`}>

@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireUser } from "@/lib/auth";
 import {
   checkoutInputSchema,
   describeCheckoutError,
+  GUEST_ORDER_CONFIRMATION_MESSAGE,
   placeOrderResultSchema,
   type CheckoutActionState,
 } from "@/lib/checkout";
@@ -13,24 +13,25 @@ import { formString, toFieldErrors } from "@/lib/form-state";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Places a COD order.
+ * Places a COD order without a customer account.
  *
  * This action is only a Zod-validated adapter around `public.place_order`. It
- * never reads prices or stock from the form and never writes tables directly.
- * The function re-derives the customer from the verified session and rebuilds
- * the entire order in one database transaction.
+ * never reads prices or stock from the form, never writes tables directly and
+ * never requires a session. The RPC revalidates everything and inserts the
+ * order, invoice lines and stock movements in one transaction.
  */
 export async function placeOrderAction(
   _previousState: CheckoutActionState,
   formData: FormData,
 ): Promise<CheckoutActionState> {
-  await requireUser("/checkout");
-
   const values = {
     customerName: formString(formData, "customerName"),
     phone: formString(formData, "phone"),
+    email: formString(formData, "email"),
     city: formString(formData, "city"),
     address: formString(formData, "address"),
+    requirements: formString(formData, "requirements"),
+    notes: formString(formData, "notes"),
   };
 
   let items: unknown;
@@ -43,7 +44,6 @@ export async function placeOrderAction(
   const parsed = checkoutInputSchema.safeParse({
     idempotencyKey: formString(formData, "idempotencyKey"),
     items,
-    couponCode: formString(formData, "couponCode"),
     ...values,
   });
 
@@ -65,7 +65,9 @@ export async function placeOrderAction(
     p_phone: parsed.data.phone,
     p_address: parsed.data.address,
     p_city: parsed.data.city,
-    p_coupon_code: parsed.data.couponCode || undefined,
+    p_email: parsed.data.email || undefined,
+    p_requirements: parsed.data.requirements || undefined,
+    p_notes: parsed.data.notes || undefined,
   });
 
   if (error) {
@@ -85,26 +87,23 @@ export async function placeOrderAction(
     console.error("place_order returned an unexpected payload");
     return {
       status: "error",
-      message: "Your order could not be confirmed right now. Please try again.",
+      message: "Your order could not be recorded right now. Please try again.",
       fieldErrors: {},
       values,
       order: null,
     };
   }
 
-  // Stock changed, so catalogue availability and the inventory screen are stale.
+  // Stock changed, so catalogue availability and the admin screens are stale.
   revalidatePath("/products");
   revalidatePath("/admin/inventory");
+  revalidatePath("/admin/orders");
 
   return {
     status: "success",
-    message: `Order ${result.data.orderNumber} has been placed. Pay on delivery.`,
+    message: GUEST_ORDER_CONFIRMATION_MESSAGE,
     fieldErrors: {},
     values: {},
-    order: {
-      id: result.data.id,
-      orderNumber: result.data.orderNumber,
-      totalPaisa: result.data.totalPaisa,
-    },
+    order: result.data,
   };
 }

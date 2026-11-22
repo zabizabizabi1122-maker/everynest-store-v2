@@ -67,7 +67,7 @@ export function LoginForm({ nextPath, notice }: LoginFormProps) {
       </Field>
 
       <button type="submit" className={`${primaryButtonClass} w-full`} disabled={isPending}>
-        {isPending ? "Logging in…" : "Log in"}
+        {isPending ? "Signing in…" : "Sign in to admin"}
       </button>
 
       <p className="text-center text-xs text-[color:var(--muted)]">

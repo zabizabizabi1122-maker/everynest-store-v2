@@ -2,6 +2,27 @@
 
 This file records decisions that future levels must not contradict.
 
+## Guest checkout supersedes customer accounts (owner-approved)
+
+The owner approved replacing authenticated customer checkout with guest checkout.
+This decision overrides the older customer-account requirements recorded below:
+
+- Customers do not sign up or log in. Customer identity is captured per order
+  (name, phone, optional email, full address, city, product requirements, notes).
+- `public.place_order` is granted to `anon`; it revalidates all input, reads
+  prices from the database and is idempotent on a global `idempotency_key`.
+- `orders.user_id` is nullable and is only legacy data; it is never used for
+  authorization. Customer-owned order RLS and self-cancellation were removed.
+- `/login` is admin-only; only `staff`/`admin` profiles may sign in.
+- Order status is admin-controlled: `pending → contacted → verified → processing
+  → shipped → delivered`, with `cancelled` from non-terminal states. Guests never
+  see an order as confirmed before admin verification.
+- Customer review submission, wishlist, saved addresses, order history and
+  coupon entry were removed from the storefront; existing data is untouched.
+- Migration: `supabase/migrations/20261122120000_guest_checkout.sql` (additive;
+  no destructive data change). Applying it to the remote dev DB, committing and
+  deploying still require separate owner approval.
+
 ## environment and tooling
 
 | Item | Value |

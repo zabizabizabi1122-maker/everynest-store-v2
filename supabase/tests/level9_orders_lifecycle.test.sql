@@ -7,8 +7,12 @@
 --   npx supabase test db
 --
 -- STATUS: NOT EXECUTED YET (no local Docker engine in this environment).
--- These assertions describe the intended Level 9 guarantees and must be run
--- against a local stack before the order lifecycle is treated as verified.
+-- These assertions describe the intended guarantees after the guest-checkout
+-- migration and must be run against a local stack before the lifecycle is
+-- treated as verified.
+--
+-- Guests place orders through `place_order` only. Every read and every status
+-- change is staff-only: there are no customer-owned orders any more.
 -- =============================================================================
 
 begin;
@@ -17,22 +21,23 @@ create extension if not exists pgtap with schema extensions;
 
 set local search_path = extensions, public, pg_catalog;
 
-select plan(28);
+select plan(35);
 
 -- -----------------------------------------------------------------------------
--- RPC surface: trusted functions are callable, helpers stay private.
+-- RPC surface: trusted functions are callable by authenticated users, never by
+-- anon, and private helpers stay private.
 -- -----------------------------------------------------------------------------
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.list_orders(integer, integer, text)',
+    'public.list_orders(integer, integer, text, text)',
     'EXECUTE'
   ),
   'authenticated can call list_orders'
 );
 
 select ok(
-  not has_function_privilege('anon', 'public.list_orders(integer, integer, text)', 'EXECUTE'),
+  not has_function_privilege('anon', 'public.list_orders(integer, integer, text, text)', 'EXECUTE'),
   'anon cannot call list_orders'
 );
 
@@ -115,7 +120,7 @@ select ok(
   exists (
     select 1
     from pg_proc p
-    where p.oid = 'public.list_orders(integer, integer, text)'::regprocedure
+    where p.oid = 'public.list_orders(integer, integer, text, text)'::regprocedure
       and p.prosecdef
       and p.proconfig @> array['search_path=']
   ),
@@ -145,8 +150,10 @@ select ok(
 );
 
 -- -----------------------------------------------------------------------------
--- Fixtures. Auth users get a profile from the Level 1 signup trigger; role
--- changes below are made by the migration role, which the role guard allows.
+-- Fixtures. Auth users get a profile from the Level 1 signup trigger; the role
+-- change below is made by the migration role, which the role guard allows.
+-- `aaaa...` is the legacy owner on one order; `bbbb...` is a non-staff account;
+-- `cccc...` is staff. Neither non-staff account may read or move any order.
 -- -----------------------------------------------------------------------------
 insert into auth.users (id, aud, role, email, encrypted_password)
 values
@@ -179,6 +186,8 @@ values (
   8
 );
 
+-- One legacy order keeps user_id to prove old rows still work; the other is a
+-- guest order with user_id null and the new contact/requirement fields.
 insert into public.orders (
   id,
   order_number,
@@ -190,8 +199,11 @@ insert into public.orders (
   total_paisa,
   customer_name,
   phone,
+  email,
   address,
   city,
+  requirements,
+  notes,
   idempotency_key,
   request_fingerprint
 )
@@ -207,24 +219,30 @@ values
     20000,
     'Customer A',
     '+923001234567',
+    'customer-a@example.test',
     '12 Test Street, Lahore',
     'Lahore',
+    'Size M',
+    null,
     '99999999-9999-4999-8999-999999999991',
     repeat('a', 32)
   ),
   (
     'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
     'ZS-202611-900002',
-    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    null,
     'pending',
     20000,
     0,
     0,
     20000,
-    'Customer A',
-    '+923001234567',
-    '12 Test Street, Lahore',
-    'Lahore',
+    'Guest Customer',
+    '+923001234568',
+    null,
+    '34 Guest Road, Karachi',
+    'Karachi',
+    null,
+    'Leave with neighbour',
     '99999999-9999-4999-8999-999999999992',
     repeat('b', 32)
   );
@@ -263,35 +281,53 @@ values (
 );
 
 -- -----------------------------------------------------------------------------
--- Authorization behavior. Claiming a different user must not expose or mutate
--- somebody else's order.
+-- Authorization behavior: a non-staff account cannot read or mutate any order,
+-- not even one that still carries its legacy user_id.
 -- -----------------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claim.sub = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
 select throws_ok(
   $$ select public.get_order('dddddddd-dddd-4ddd-8ddd-dddddddddddd'::uuid) $$,
-  'P0002',
-  'Order not found',
-  'a customer cannot read another customer order'
+  '42501',
+  'Only staff may view orders',
+  'a non-staff account cannot read any order'
 );
 
 select throws_ok(
   $$ select public.transition_order_status('dddddddd-dddd-4ddd-8ddd-dddddddddddd'::uuid, 'cancelled') $$,
   '42501',
-  'Not authorized to manage this order',
-  'a customer cannot cancel another customer order'
+  'Only staff may change order status',
+  'a non-staff account cannot change any order'
+);
+
+set local role anon;
+
+select throws_ok(
+  $$ select public.list_orders() $$,
+  '42501',
+  'Authentication is required to view orders',
+  'anon cannot list orders'
 );
 
 -- -----------------------------------------------------------------------------
--- Valid cancellation: status changes, stock is restored once and an audit row
--- is written. A retry is a no-op and must not restore stock again.
+-- Staff may read every order, including guest orders.
 -- -----------------------------------------------------------------------------
-set local request.jwt.claim.sub = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+set local role authenticated;
+set local request.jwt.claim.sub = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
 select lives_ok(
+  $$ select public.get_order('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid) $$,
+  'staff can read a guest order'
+);
+
+-- -----------------------------------------------------------------------------
+-- Valid cancellation: only staff, status changes, stock is restored once and
+-- an audit row is written. A retry is a no-op and must not restore stock again.
+-- -----------------------------------------------------------------------------
+select lives_ok(
   $$ select public.transition_order_status('dddddddd-dddd-4ddd-8ddd-dddddddddddd'::uuid, 'cancelled') $$,
-  'a customer can cancel a pending own order'
+  'staff can cancel a pending order'
 );
 
 reset role;
@@ -332,7 +368,7 @@ select is(
 );
 
 set local role authenticated;
-set local request.jwt.claim.sub = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+set local request.jwt.claim.sub = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
 select lives_ok(
   $$ select public.transition_order_status('dddddddd-dddd-4ddd-8ddd-dddddddddddd'::uuid, 'cancelled') $$,
@@ -359,7 +395,8 @@ select is(
 );
 
 -- -----------------------------------------------------------------------------
--- Staff transitions: forward steps one at a time, never skipping stages.
+-- Staff forward transitions: forward one stage at a time, never skipping.
+-- pending -> contacted -> verified -> processing -> shipped -> delivered.
 -- -----------------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claim.sub = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -372,14 +409,46 @@ select throws_ok(
 );
 
 select lives_ok(
-  $$ select public.transition_order_status('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'confirmed') $$,
-  'staff can confirm a pending order'
+  $$ select public.transition_order_status('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'contacted') $$,
+  'staff can move a pending order to contacted'
 );
+
+select lives_ok(
+  $$ select public.transition_order_status('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'verified') $$,
+  'contacted moves to verified'
+);
+
+select lives_ok(
+  $$ select public.transition_order_status('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'processing') $$,
+  'verified moves to processing'
+);
+
+select lives_ok(
+  $$ select public.transition_order_status('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'shipped') $$,
+  'processing moves to shipped'
+);
+
+select lives_ok(
+  $$ select public.transition_order_status('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'delivered') $$,
+  'shipped moves to delivered'
+);
+
+reset role;
 
 select is(
   (select status from public.orders where id = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'),
-  'confirmed',
-  'the confirmed status is stored'
+  'delivered',
+  'the guest order reached delivered'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+
+select throws_ok(
+  $$ select public.transition_order_status('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::uuid, 'cancelled') $$,
+  '22023',
+  'Invalid order status transition',
+  'a delivered order cannot be cancelled'
 );
 
 reset role;

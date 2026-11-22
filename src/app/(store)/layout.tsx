@@ -2,7 +2,6 @@ import Link from "next/link";
 import { connection } from "next/server";
 import type { ReactNode } from "react";
 
-import { signOutAction } from "@/app/(auth)/actions";
 import { BrandMark } from "@/components/store/brand-mark";
 import { CartButton } from "@/components/store/cart-button";
 import { CartDrawer } from "@/components/store/cart-drawer";
@@ -12,35 +11,26 @@ import { PromoBar } from "@/components/store/promo-bar";
 import { ScrollToTop } from "@/components/store/scroll-to-top";
 import { SearchForm } from "@/components/store/search-form";
 import { ToastProvider } from "@/components/store/toast";
-import { getCurrentUser } from "@/lib/auth";
 import { loadPublicCategories } from "@/lib/catalog";
-import { isSupabaseConfigured } from "@/lib/env";
 
 /**
- * The header reflects the verified session, so this layout reads cookies and
- * cannot be prerendered as a static shell. `instant = false` is the Next 16
- * Cache Components way of declaring a deliberately blocking route.
+ * Category navigation is loaded per request, so this layout cannot be
+ * prerendered as a static shell. `instant = false` is the Next 16 Cache
+ * Components way of declaring a deliberately blocking route.
  */
 export const instant = false;
-
-const iconButtonClass =
-  "grid size-10 place-items-center rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] text-foreground transition hover:bg-[color:var(--background)] hover:text-[color:var(--primary)]";
 
 const footerLinkClass = "block py-1.5 text-sm text-white/70 transition hover:text-white";
 
 /**
- * Customer storefront shell: session-aware header, category navigation,
- * search and the non-authoritative client cart.
+ * Customer storefront shell: category navigation, search and the
+ * non-authoritative client cart. Authentication lives in the admin panel.
  */
 export default async function StoreLayout({ children }: { children: ReactNode }) {
-  // Supabase token validation reads Date.now(); keep this shell request-bound.
+  // Catalogue reads are request-bound; keep this shell out of the prerender.
   await connection();
 
-  const configured = isSupabaseConfigured();
-  const [user, categories] = await Promise.all([
-    configured ? getCurrentUser() : Promise.resolve(null),
-    loadPublicCategories(),
-  ]);
+  const categories = await loadPublicCategories();
 
   const departmentHref = (slug: string) => {
     const category = categories.find((item) => item.slug === slug && item.parentId === null);
@@ -67,37 +57,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
               </div>
 
               <div className="ml-auto flex items-center gap-1.5 sm:ml-0">
-                <Link href="/wishlist" aria-label="Wishlist" title="Wishlist" className={iconButtonClass}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className="size-5">
-                    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
-                  </svg>
-                </Link>
                 <CartButton />
-                {user ? (
-                  <>
-                    <Link href="/account" aria-label="My account" title="My account" className={iconButtonClass}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className="size-5">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M4 21a8 8 0 0 1 16 0" />
-                      </svg>
-                    </Link>
-                    <form action={signOutAction}>
-                      <button type="submit" aria-label="Sign out" title="Sign out" className={iconButtonClass}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className="size-5">
-                          <path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" />
-                          <path d="M15 8l4 4-4 4M19 12H9" />
-                        </svg>
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  <Link href="/login" aria-label="Log in" title="Log in" className={iconButtonClass}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className="size-5">
-                      <circle cx="12" cy="8" r="4" />
-                      <path d="M4 21a8 8 0 0 1 16 0" />
-                    </svg>
-                  </Link>
-                )}
               </div>
             </div>
 
@@ -153,10 +113,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
               <nav aria-label="Support">
                 <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.16em] text-white">Support</h2>
                 <div className="mt-3">
-                  <Link href="/account" className={footerLinkClass}>My account</Link>
-                  <Link href="/orders" className={footerLinkClass}>My orders</Link>
                   <Link href="/cart" className={footerLinkClass}>Cart</Link>
-                  <Link href="/wishlist" className={footerLinkClass}>Wishlist</Link>
                 </div>
               </nav>
 
@@ -169,7 +126,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
                   Nationwide delivery and cash on delivery on every order.
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-white/70">
-                  Order help is available in your account.
+                  Order help is available from our support team.
                 </p>
               </div>
             </div>

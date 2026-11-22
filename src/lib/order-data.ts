@@ -6,17 +6,18 @@ import { createClient } from "@/lib/supabase/server";
 export const ORDER_PAGE_SIZE = 20;
 
 /**
- * Loads the signed-in user's visible orders through `public.list_orders`.
+ * Loads orders through the staff-only `public.list_orders` RPC.
  *
- * The RPC already scopes customers to their own rows and lets staff view all
- * orders. It returns bigint totals as decimal strings so this module can safely
- * validate and forward them to the UI.
+ * The RPC returns bigint totals as decimal strings so this module can safely
+ * validate and forward them to the UI. Search matches order number, customer
+ * name or phone inside the database.
  */
 export const loadOrderList = cache(
   async (options?: {
     page?: number;
     pageSize?: number;
     status?: string | null;
+    search?: string | null;
   }): Promise<OrderListResult> => {
     const supabase = await createClient();
     const page = options?.page ?? 1;
@@ -26,6 +27,7 @@ export const loadOrderList = cache(
       p_page: page,
       p_page_size: pageSize,
       ...(options?.status ? { p_status: options.status } : {}),
+      ...(options?.search ? { p_search: options.search } : {}),
     });
 
     if (error) {
@@ -44,11 +46,10 @@ export const loadOrderList = cache(
 );
 
 /**
- * Loads one authorized order with its immutable invoice lines through
- * `public.get_order`.
+ * Loads one order with its immutable invoice lines through `public.get_order`.
  *
- * Returns `null` when the order does not exist or is not visible to the caller;
- * the database uses the same error for both cases to avoid leaking existence.
+ * Returns `null` when the order does not exist; the staff-only RPC uses the same
+ * error for a missing id so order existence is not leaked.
  */
 export async function loadOrder(orderId: string): Promise<OrderDetail | null> {
   const supabase = await createClient();

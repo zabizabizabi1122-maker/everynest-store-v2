@@ -33,7 +33,9 @@ export function reportsHref(days: ReportDays): string {
 const statusCountsSchema = z
   .object({
     pending: z.number().int().nonnegative(),
-    confirmed: z.number().int().nonnegative(),
+    contacted: z.number().int().nonnegative(),
+    verified: z.number().int().nonnegative(),
+    processing: z.number().int().nonnegative(),
     shipped: z.number().int().nonnegative(),
     delivered: z.number().int().nonnegative(),
     cancelled: z.number().int().nonnegative(),

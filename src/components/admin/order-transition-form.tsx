@@ -60,7 +60,7 @@ export function OrderTransitionForm({ orderId, transitions }: OrderTransitionFor
               name="targetStatus"
               value={target}
               disabled={isPending}
-              className={target === "confirmed" ? primaryButtonClass : secondaryButtonClass}
+              className={target === "contacted" ? primaryButtonClass : secondaryButtonClass}
             >
               {isPending ? "Saving…" : `Mark ${orderStatusLabel(target).toLowerCase()}`}
             </button>

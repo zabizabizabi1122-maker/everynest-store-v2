@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
- * Layout for the authentication screens (login / signup).
+ * Layout for the administrator sign-in screen.
  *
  * Kept intentionally minimal so the form is the focus. The storefront header is
- * not reused here to avoid offering cart/account links to a signed-out visitor.
+ * not reused here to avoid offering cart links to a signed-out visitor.
  */
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           href="/"
           className="text-sm font-semibold uppercase tracking-[0.2em] text-[color:var(--primary)]"
         >
-          EveryNest
+          EveryNest Admin
         </Link>
         <Link
           href="/"

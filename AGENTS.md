@@ -282,10 +282,11 @@ Application roles:
 - `staff`
 - `admin`
 
-Permissions:
-- Customer: manage own account/profile fields, read active catalogue, manage own cart client-side, place/read own orders, and cancel own pending order through a protected function.
-- Staff: manage categories/products/variants/images, receive or adjust stock through approved functions, read operational customer/order information, and perform permitted order status transitions.
-- Admin: all staff capabilities, plus supplier create/edit and privileged administrative operations.
+Permissions (updated for the approved guest-checkout model):
+- Guests (no account): read the active catalogue, manage a client-side cart, and place an order through `public.place_order`. They receive an order id on screen only; they have no login, account, wishlist, order history, tracking page, or self-cancellation.
+- Staff: manage categories/products/variants/images, receive or adjust stock through approved functions, and read/list/search all orders and their full guest contact details.
+- Admin: all staff capabilities, plus supplier create/edit, privileged administrative operations, and the only role that changes order status.
+- `/login` is admin-only. A successful password sign-in is rejected unless the `profiles` row for that user has `staff` or `admin` role.
 - Customer and staff users must never be able to grant themselves a higher role.
 - Role changes in version 1 are performed manually by a trusted database owner through the Supabase Dashboard/SQL editor. Do not create a public role-management UI in v1.
 
@@ -362,8 +363,8 @@ Enforce stock protection at more than one level:
 Implement a single public RPC function such as `public.place_order(...)` that performs the entire checkout in **one PostgreSQL transaction**.
 
 It must:
-1. Derive the customer from `auth.uid()` and reject unauthenticated callers.
-2. Validate the customer profile/checkout fields and normalize the Pakistani phone number.
+1. Be callable by `anon` (guest checkout). Do **not** derive the customer from `auth.uid()`; customer identity is supplied per order as name, phone, optional email, complete address, city, product requirements and notes, and is revalidated server-side.
+2. Validate every guest field (including optional email format and text lengths) and normalize the Pakistani phone number.
 3. Validate the items input, duplicate variant IDs, quantity limits, and maximum number of lines.
 4. Lock all requested variant rows in a consistent order (for example, ascending variant ID with `FOR UPDATE`) to reduce deadlocks.
 5. Verify every variant and product is active and each requested quantity is available.
@@ -378,31 +379,34 @@ The function must be safe against two customers trying to purchase the final uni
 
 ### Idempotency
 - Require a client-generated UUID idempotency key for checkout.
-- Enforce `UNIQUE(user_id, idempotency_key)`.
-- A repeated request from the same user with the same key and same normalized payload returns the existing order rather than creating a duplicate.
+- Enforce `UNIQUE(idempotency_key)` globally, because a guest has no `user_id`.
+- A repeated request with the same key and same normalized payload returns the existing order rather than creating a duplicate.
 - If the same key is reused with a different normalized payload, return a clear conflict error rather than returning an unrelated order.
 - Handle concurrent duplicate submissions safely using the database uniqueness constraint and transaction logic.
 
-### Order status and cancellation
-Allowed statuses:
+### Order status and verification
+Allowed statuses (admin-managed only):
 - `pending`
-- `confirmed`
+- `contacted`
+- `verified`
+- `processing`
 - `shipped`
 - `delivered`
 - `cancelled`
 
 Enforce transitions in database functions, not direct table updates:
-- Normal progress: `pending → confirmed → shipped → delivered`.
-- Customer may cancel only a `pending` order.
-- Staff may cancel a `pending` or `confirmed` order.
+- New guest orders always start at `pending`. Never display a new order as confirmed.
+- Normal progress: `pending → contacted → verified → processing → shipped → delivered`.
+- `cancelled` is reachable from `pending`, `contacted`, `verified` and `processing` only. Delivered orders are final.
+- Only staff/admin may read, list, search or transition orders. Guests get no order lookup RPC and no self-cancellation.
 - A cancellation must lock the order, verify its current state and authorization, transition it once, and restore stock through the private helper with `return` movements.
 - Cancellation must be atomic and idempotent; repeated cancellation must not restore stock more than once.
-- Customers have no direct `UPDATE` privilege on orders. Staff status changes also go through the transition function.
+- No application role has direct `UPDATE` privilege on orders. All status changes go through `public.transition_order_status`.
 
 ### Checkout rules
 - Payment method in v1: **Cash on Delivery (COD) only**. Do not add a payment gateway.
 - Shipping charge is configurable in one documented server-side configuration source and defaults to free (`0` paisa). Store the actual shipping amount on the order.
-- Discount defaults to zero in v1. Coupon functionality is optional Level 11.
+- Discount defaults to zero in guest checkout. The coupon feature remains in the database for admin use but is hidden in the guest storefront because it required a customer account.
 - Validate all server inputs with Zod before calling the database RPC, and validate critical business rules again inside the database function.
 - Map known database error codes (for example, out of stock, invalid quantity, inactive variant, idempotency conflict) to friendly customer messages. Never return raw SQL/database errors to the browser.
 
@@ -485,7 +489,7 @@ Accessibility:
 - Categories dropdown.
 - Search.
 - Cart icon and item count.
-- Login/signup or account menu.
+- No login/signup or account menu: checkout is guest-only.
 
 **Homepage**
 - Hero section.
@@ -595,11 +599,9 @@ everynest/
 │   │   │   │   ├── page.tsx
 │   │   │   │   └── [slug]/page.tsx
 │   │   │   ├── cart/page.tsx
-│   │   │   ├── checkout/page.tsx
-│   │   │   └── orders/
+│   │   │   └── checkout/page.tsx
 │   │   ├── (auth)/
-│   │   │   ├── login/page.tsx
-│   │   │   └── signup/page.tsx
+│   │   │   └── login/page.tsx   (admin-only)
 │   │   ├── admin/
 │   │   │   ├── layout.tsx
 │   │   │   ├── page.tsx
@@ -676,7 +678,7 @@ Test:
 
 ### End-to-end test
 Use Playwright for one complete flow when the required services/test accounts are available:
-`signup → browse product → select variant → add to cart → checkout → admin sees order`.
+`browse product → select variant → add to cart → guest checkout → admin sees and verifies order`.
 
 ### Final CI checks (Level 12)
 Configure GitHub Actions for:
@@ -745,14 +747,12 @@ Do not skip levels, merge multiple levels, or automatically continue after compl
 
 Deliverable: A clean application foundation and a secure, migration-based core database.
 
-### Level 2 — Authentication
-- Signup, login, logout.
-- Profile creation via auth trigger.
-- Edit own full name and phone only.
-- Protected customer account pages.
-- Secure server-side session verification.
+### Level 2 — Authentication (superseded for customers by the guest-checkout change)
+- Supabase session, admin-only login and logout; profile creation via auth trigger still exists for admin accounts.
+- The customer signup, profile, account, wishlist and order-history pages were removed. Customer contact details are now collected per order at checkout.
+- Secure server-side session verification still protects every admin page and action.
 
-Deliverable: Working customer authentication and profile management.
+Deliverable: Admin authentication plus guest checkout (no customer accounts).
 
 ### Level 3 — Admin shell and access control
 - Responsive admin layout, sidebar, header, and navigation.

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 
@@ -9,8 +8,8 @@ import { safeNextPath } from "@/lib/validators";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Log in · EveryNest",
-  description: "Log in to your EveryNest account.",
+  title: "Admin sign in · EveryNest",
+  description: "Sign in to the EveryNest admin panel.",
 };
 
 // Reads the session cookie to skip the form for signed-in users.
@@ -24,7 +23,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   await connection();
 
   const params = await searchParams;
-  const nextPath = safeNextPath(params.next, "/account");
+  const nextPath = safeNextPath(params.next, "/admin");
 
   // Already signed in: no reason to show the login form.
   const user = await getCurrentUser();
@@ -32,27 +31,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   const notice =
     params.error === "link"
-      ? "That confirmation link is invalid or has expired. Try logging in, or sign up again to receive a new link."
+      ? "That confirmation link is invalid or has expired. Try signing in again."
       : null;
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Admin sign in</h1>
       <p className="mt-1.5 text-sm text-[color:var(--muted)]">
-        Log in to view your account and track your orders.
+        Sign in with a staff or administrator account to manage EveryNest.
       </p>
 
       <LoginForm nextPath={nextPath} notice={notice} />
-
-      <p className="mt-6 text-sm text-[color:var(--muted)]">
-        New to EveryNest?{" "}
-        <Link
-          href={`/signup?next=${encodeURIComponent(nextPath)}`}
-          className="font-semibold text-[color:var(--primary)] underline-offset-4 hover:underline"
-        >
-          Create an account
-        </Link>
-      </p>
     </>
   );
 }

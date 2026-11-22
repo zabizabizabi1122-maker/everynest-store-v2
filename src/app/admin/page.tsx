@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { connection } from "next/server";
 
 import { AdminNavIcon } from "@/components/admin/nav-icon";
@@ -60,7 +59,7 @@ export default async function AdminDashboardPage() {
         <StatCard
           label="Total sales"
           value={formatDecimalPaisa(report.totalSalesPaisa)}
-          hint="Confirmed, shipped and delivered orders"
+          hint="Verified, processing, shipped and delivered orders"
         />
         <StatCard
           label="Total orders"
@@ -70,7 +69,7 @@ export default async function AdminDashboardPage() {
         <StatCard
           label="Pending orders"
           value={String(report.statusCounts.pending)}
-          hint="Waiting to be confirmed"
+          hint="Waiting for admin verification"
         />
         <StatCard
           label="Low-stock variants"
@@ -116,13 +115,6 @@ export default async function AdminDashboardPage() {
             Roles come from <code className="font-mono">public.profiles</code> on every
             request. A cookie or form value cannot upgrade them.
           </p>
-
-          <Link
-            href="/account"
-            className="mt-4 inline-flex text-sm font-semibold text-[color:var(--brand)] underline-offset-4 hover:underline"
-          >
-            Open my customer account
-          </Link>
         </section>
 
         <section

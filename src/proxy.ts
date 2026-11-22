@@ -9,9 +9,8 @@ import { updateSession } from "@/lib/supabase/proxy";
  *  1. refresh the Supabase session cookies on protected/auth routes;
  *  2. preliminary redirects for a nicer flow.
  *
- * This is NOT the authorization layer. `/account` re-checks the user on the
- * server, `/admin` checks the caller's role in the database, and PostgreSQL
- * enforces RLS and column privileges regardless.
+ * This is NOT the authorization layer. `/admin` checks the caller's role on the
+ * server, and PostgreSQL enforces RLS and column privileges regardless.
  */
 export async function proxy(request: NextRequest) {
   const { response, user } = await updateSession(request);
@@ -35,23 +34,20 @@ export async function proxy(request: NextRequest) {
 
   // Preliminary protection only: send signed-out visitors to login. The role
   // for `/admin` is checked later, on the server, against the database.
-  const requiresSignIn =
-    pathname.startsWith("/account") ||
-    pathname.startsWith("/orders") ||
-    pathname.startsWith("/admin");
+  const requiresSignIn = pathname.startsWith("/admin");
 
   if (!user && requiresSignIn) {
     const next = encodeURIComponent(`${pathname}${search}`);
     return redirectTo(`/login?next=${next}`);
   }
 
-  if (user && (pathname === "/login" || pathname === "/signup")) {
-    return redirectTo("/account");
+  if (user && pathname === "/login") {
+    return redirectTo("/admin");
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/account/:path*", "/orders/:path*", "/admin/:path*", "/login", "/signup"],
+  matcher: ["/admin/:path*", "/login"],
 };
