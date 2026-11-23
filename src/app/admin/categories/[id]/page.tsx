@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { categoryHasVariants, loadCategoryTree } from "@/lib/category-data";
 import {
   descendantIds,
@@ -30,7 +30,7 @@ export default async function EditCategoryPage({ params, searchParams }: EditCat
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/categories");
+  await requirePermission("categories.view", "/admin/categories");
 
   const { id } = await params;
   const { saved } = await searchParams;

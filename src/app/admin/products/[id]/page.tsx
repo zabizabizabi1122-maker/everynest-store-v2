@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { categorySchemaMap, loadCategoryTree } from "@/lib/category-data";
 import { loadProductDetail } from "@/lib/product-data";
 import type { Json } from "@/types/database.types";
@@ -35,7 +35,7 @@ export default async function EditProductPage({ params, searchParams }: EditProd
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/products");
+  await requirePermission("products.view", "/admin/products");
 
   const { id } = await params;
   const { saved, imageError } = await searchParams;

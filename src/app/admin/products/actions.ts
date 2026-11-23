@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { loadCategoryTree } from "@/lib/category-data";
 import { effectiveAttributes } from "@/lib/category-schema";
 import { formString, toFieldErrors, type FormActionState } from "@/lib/form-state";
@@ -122,7 +122,7 @@ export async function createProductAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireStaff("/admin/products/new");
+  await requirePermission("products.manage", "/admin/products/new");
 
   const raw = readProductForm(formData);
   const parsed = productFormSchema.safeParse(raw);
@@ -243,7 +243,7 @@ export async function updateProductAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireStaff("/admin/products");
+  await requirePermission("products.manage", "/admin/products");
 
   const raw = readProductForm(formData);
   const id = uuidSchema.safeParse(formString(formData, "id"));
@@ -419,7 +419,7 @@ export async function updateProductAction(
 
 /** Archive or reactivate a product. No product is ever hard-deleted. */
 export async function setProductActiveAction(formData: FormData): Promise<void> {
-  await requireStaff("/admin/products");
+  await requirePermission("products.manage", "/admin/products");
 
   const id = uuidSchema.safeParse(formString(formData, "id"));
   const isActive = formString(formData, "active") === "true";
@@ -494,7 +494,7 @@ function imageRedirect(productId: string, errorCode?: string): never {
 }
 
 export async function uploadProductImageAction(formData: FormData): Promise<void> {
-  await requireStaff("/admin/products");
+  await requirePermission("products.manage", "/admin/products");
 
   const id = uuidSchema.safeParse(formString(formData, "productId"));
 
@@ -568,7 +568,7 @@ export async function uploadProductImageAction(formData: FormData): Promise<void
 }
 
 export async function removeProductImageAction(formData: FormData): Promise<void> {
-  await requireStaff("/admin/products");
+  await requirePermission("products.manage", "/admin/products");
 
   const productId = uuidSchema.safeParse(formString(formData, "productId"));
   const imageId = uuidSchema.safeParse(formString(formData, "imageId"));
@@ -606,7 +606,7 @@ export async function removeProductImageAction(formData: FormData): Promise<void
 }
 
 export async function moveProductImageAction(formData: FormData): Promise<void> {
-  await requireStaff("/admin/products");
+  await requirePermission("products.manage", "/admin/products");
 
   const productId = uuidSchema.safeParse(formString(formData, "productId"));
   const imageId = uuidSchema.safeParse(formString(formData, "imageId"));
@@ -650,4 +650,61 @@ export async function moveProductImageAction(formData: FormData): Promise<void> 
 
   await revalidateProduct(productId.data);
   imageRedirect(productId.data);
+}
+
+/** Extracts a Storage object path from a public product-images URL. */
+function productImageStoragePath(url: string): string | null {
+  const marker = "/storage/v1/object/public/product-images/";
+  const index = url.indexOf(marker);
+  if (index === -1) return null;
+
+  const raw = url.slice(index + marker.length).split("?")[0];
+  if (!raw) return null;
+
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+/**
+ * Permanently deletes a product through the trusted RPC. The RPC refuses rows
+ * with order or stock history; Storage objects are removed only after the
+ * database delete succeeds, so a failed guard leaves the gallery intact.
+ */
+export async function deleteProductAction(formData: FormData): Promise<void> {
+  await requirePermission("products.delete", "/admin/products");
+
+  const id = uuidSchema.safeParse(formString(formData, "id"));
+  if (!id.success) redirect("/admin/products?status=delete-error");
+
+  const supabase = await createClient();
+  const { data: images } = await supabase
+    .from("product_images")
+    .select("url")
+    .eq("product_id", id.data);
+
+  const { error } = await supabase.rpc("delete_product", { p_product_id: id.data });
+
+  if (error) {
+    console.error("Product delete failed", error.code, error.message);
+    const reason = encodeURIComponent(error.message.slice(0, 180));
+    redirect(`/admin/products?status=delete-blocked&reason=${reason}`);
+  }
+
+  const paths = (images ?? [])
+    .map((image) => productImageStoragePath(image.url))
+    .filter((path): path is string => path !== null);
+
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage
+      .from("product-images")
+      .remove(paths);
+    if (storageError) console.error("Product image cleanup failed", storageError.message);
+  }
+
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  redirect("/admin/products?status=deleted");
 }

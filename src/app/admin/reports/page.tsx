@@ -10,7 +10,7 @@ import {
   TopProductsTable,
 } from "@/components/admin/report-sections";
 import { secondaryButtonClass } from "@/components/ui/form";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { formatDecimalPaisa } from "@/lib/checkout";
 import { loadReports } from "@/lib/report-data";
 import { parseReportDays, reportsHref, REPORT_DAYS } from "@/lib/reports";
@@ -30,7 +30,7 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/reports");
+  await requirePermission("reports.view", "/admin/reports");
 
   const params = await searchParams;
   const days = parseReportDays(params.days);
@@ -75,11 +75,13 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
           label="Total sales"
           value={formatDecimalPaisa(report.totalSalesPaisa)}
           hint="Verified, processing, shipped and delivered orders"
+          delay={0}
         />
         <StatCard
           label="Total orders"
           value={String(report.statusCounts.all)}
           hint={`${report.statusCounts.pending} pending · ${report.statusCounts.cancelled} cancelled`}
+          delay={60}
         />
         <StatCard
           label="Live orders"
@@ -91,11 +93,13 @@ export default async function AdminReportsPage({ searchParams }: AdminReportsPag
               report.statusCounts.delivered,
           )}
           hint={`${report.statusCounts.delivered} delivered`}
+          delay={120}
         />
         <StatCard
           label="Low-stock variants"
           value={String(report.lowStockCount)}
           hint={`${report.activeVariants} active variants in catalogue`}
+          delay={180}
         />
       </section>
 

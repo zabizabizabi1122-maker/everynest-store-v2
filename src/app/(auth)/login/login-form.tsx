@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import {
@@ -69,6 +70,25 @@ export function LoginForm({ nextPath, notice }: LoginFormProps) {
       <button type="submit" className={`${primaryButtonClass} w-full`} disabled={isPending}>
         {isPending ? "Signing in…" : "Sign in to admin"}
       </button>
+
+      <p className="text-center text-sm text-[color:var(--muted)]">
+        <Link
+          href="/forgot-password"
+          className="font-medium text-[color:var(--primary)] transition hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
+        >
+          Forgot password?
+        </Link>
+      </p>
+
+      <p className="text-center text-xs text-[color:var(--muted)]">
+        Need to confirm your email?{" "}
+        <Link
+          href="/verify-email"
+          className="font-medium text-[color:var(--primary)] transition hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
+        >
+          Resend verification link
+        </Link>
+      </p>
 
       <p className="text-center text-xs text-[color:var(--muted)]">
         Sessions are stored in secure, httpOnly cookies.

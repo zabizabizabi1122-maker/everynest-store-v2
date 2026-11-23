@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { loadCategoryTree } from "@/lib/category-data";
 
 import { CategoryForm } from "../category-form";
@@ -17,7 +17,7 @@ export default async function NewCategoryPage() {
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/categories/new");
+  await requirePermission("categories.view", "/admin/categories/new");
 
   const categories = await loadCategoryTree();
   const parents = categories

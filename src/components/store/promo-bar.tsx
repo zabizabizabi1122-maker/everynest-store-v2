@@ -4,17 +4,27 @@ import { useState } from "react";
 
 import { formatPkr } from "@/lib/money";
 
+export interface PromoBarProps {
+  /** Already formatted for display by the settings loader. */
+  message?: string;
+  /** When false the bar is not rendered at all. */
+  enabled?: boolean;
+}
+
 /** Dismissible delivery announcement shown above the storefront header. */
-export function PromoBar() {
+export function PromoBar({
+  message = `Free delivery over ${formatPkr(300_000)}`,
+  enabled = true,
+}: PromoBarProps) {
   const [visible, setVisible] = useState(true);
 
-  if (!visible) return null;
+  if (!enabled || !visible) return null;
 
   return (
-    <div className="bg-[color:var(--primary)] px-4 py-2 text-center text-xs font-medium text-white sm:text-sm">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-center gap-2.5">
-        <span aria-hidden="true" className="text-[color:var(--accent)]">✦</span>
-        <span>Free delivery over {formatPkr(300_000)}</span>
+    <div className="promo-bar px-4 py-2 text-center text-xs font-medium text-white sm:text-sm">
+      <div className="relative mx-auto flex max-w-[1200px] items-center justify-center gap-2.5">
+        <span aria-hidden="true" className="promo-sparkle text-[color:var(--accent)]">✦</span>
+        <span>{message}</span>
         <button
           type="button"
           onClick={() => setVisible(false)}

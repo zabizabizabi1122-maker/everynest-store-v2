@@ -2,22 +2,23 @@
  * Role helpers for the admin area.
  *
  * `public.profiles.role` is a text column with a CHECK constraint:
- * `'customer' | 'staff' | 'admin'`. A role is never accepted from a form, URL,
- * cookie payload or JWT claim — it is always read from the database row that
- * Row Level Security has already scoped to the signed-in user.
+ * `'customer' | 'admin' | 'super_admin'`. A role is never accepted from a form,
+ * URL, cookie payload or JWT claim — it is always read from the database row
+ * that RLS has already scoped to the signed-in user.
  *
- * Keeping the decision in pure functions means it can be unit tested and reused
- * by Server Actions without duplicating string comparisons.
+ * Super Admin has implicit full access. Admin receives explicit permissions
+ * from `role_permissions` and `admin_permissions`. Keeping these decisions in
+ * pure functions makes them unit testable and reusable by Server Actions.
  */
 
-export const APP_ROLES = ["customer", "staff", "admin"] as const;
+export const APP_ROLES = ["customer", "admin", "super_admin"] as const;
 
 export type AppRole = (typeof APP_ROLES)[number];
 
 const ROLE_LABELS: Record<AppRole, string> = {
   customer: "Customer",
-  staff: "Staff",
   admin: "Admin",
+  super_admin: "Super Admin",
 };
 
 export function isAppRole(value: unknown): value is AppRole {
@@ -25,15 +26,20 @@ export function isAppRole(value: unknown): value is AppRole {
 }
 
 /**
- * Staff and admin share the admin panel. Admin additionally owns destructive
- * catalogue and supplier operations (Levels 4–6), so the distinction matters.
+ * Historical name retained because RLS helpers and callsites use it. It now
+ * means "any account allowed in the admin area".
  */
 export function isStaffRole(role: string | null | undefined): boolean {
-  return role === "staff" || role === "admin";
+  return role === "admin" || role === "super_admin";
 }
 
+/** Broad admin-panel check. Specific mutations use permission keys. */
 export function isAdminRole(role: string | null | undefined): boolean {
-  return role === "admin";
+  return isStaffRole(role);
+}
+
+export function isSuperAdminRole(role: string | null | undefined): boolean {
+  return role === "super_admin";
 }
 
 /** Single decision point for "may this role open /admin at all?". */

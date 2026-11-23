@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { type FormActionState, formString } from "@/lib/form-state";
 import { uuidSchema } from "@/lib/validators";
 import { createClient } from "@/lib/supabase/server";
@@ -18,7 +18,7 @@ export async function moderateReviewAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireStaff("/admin/reviews");
+  await requirePermission("reviews.manage", "/admin/reviews");
 
   const id = uuidSchema.safeParse(formString(formData, "reviewId"));
   const status = formString(formData, "status");

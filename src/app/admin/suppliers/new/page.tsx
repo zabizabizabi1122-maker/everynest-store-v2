@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 import { SupplierForm } from "../supplier-form";
 
@@ -16,7 +16,7 @@ export default async function NewSupplierPage() {
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireAdmin("/admin/suppliers/new");
+  await requirePermission("suppliers.view", "/admin/suppliers/new");
 
   return (
     <div className="mx-auto w-full max-w-3xl">

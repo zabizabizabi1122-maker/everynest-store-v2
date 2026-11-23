@@ -13,10 +13,10 @@ export const inputClass =
   "mt-1.5 block w-full rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] px-3.5 py-2.5 text-sm text-[color:var(--foreground)] shadow-sm outline-none transition placeholder:text-[color:var(--muted)] focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--primary)]/20 disabled:cursor-not-allowed disabled:opacity-60";
 
 export const primaryButtonClass =
-  "inline-flex items-center justify-center rounded-[10px] bg-[color:var(--primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center rounded-[10px] bg-[color:var(--primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--primary-hover)] hover:shadow-md active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export const secondaryButtonClass =
-  "inline-flex items-center justify-center rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] px-3.5 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--background)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]";
+  "inline-flex items-center justify-center rounded-[10px] border border-[color:var(--border)] bg-[color:var(--surface)] px-3.5 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--background)] active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]";
 
 interface FieldProps {
   id: string;

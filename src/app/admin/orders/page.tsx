@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/form";
 import { OrderStatusBadge } from "@/components/ui/order-status";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { ORDER_PAGE_SIZE, loadOrderList } from "@/lib/order-data";
 import {
   formatOrderDate,
@@ -50,7 +50,7 @@ export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageP
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/orders");
+  await requirePermission("orders.view", "/admin/orders");
 
   const params = await searchParams;
   const statusResult = orderStatusSchema.safeParse(params.status);

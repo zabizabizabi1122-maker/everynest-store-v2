@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 interface LoginPageProps {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; notice?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -30,9 +30,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   if (user) redirect(nextPath);
 
   const notice =
-    params.error === "link"
-      ? "That confirmation link is invalid or has expired. Try signing in again."
-      : null;
+    params.notice === "reset-link-invalid"
+      ? "That password reset link is invalid or has expired. Request a new one."
+      : params.notice === "password-updated"
+        ? "Your password has been updated. Sign in with your new password."
+        : params.notice === "session-expired"
+          ? "Your session expired or was closed. Please sign in again."
+          : params.notice === "signed-out"
+            ? "You have been signed out."
+            : null;
 
   return (
     <>

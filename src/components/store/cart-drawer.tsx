@@ -42,14 +42,14 @@ export function CartDrawer() {
         type="button"
         aria-label="Close cart"
         onClick={closeCart}
-        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
+        className="animate-fade-in absolute inset-0 bg-neutral-900/40 backdrop-blur-sm"
       />
 
       <aside
         role="dialog"
         aria-modal="true"
         aria-labelledby="cart-heading"
-        className="relative flex h-full w-full max-w-md flex-col bg-[color:var(--surface)] shadow-2xl"
+        className="animate-drawer-in relative flex h-full w-full max-w-md flex-col bg-[color:var(--surface)] shadow-2xl"
       >
         <header className="flex items-center justify-between gap-4 border-b border-[color:var(--border)] px-5 py-4">
           <div>
@@ -65,7 +65,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={clear}
-                className="rounded-lg px-2 py-1 text-xs font-semibold text-[color:var(--muted)] transition hover:bg-[color:var(--background)] hover:text-red-600 focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
+                className="rounded-lg px-2 py-1 text-xs font-semibold text-[color:var(--muted)] transition hover:bg-[color:var(--background)] hover:text-red-600 active:scale-95 motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
               >
                 Clear all
               </button>
@@ -131,7 +131,7 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => setQuantity(item.variantId, item.quantity - 1)}
                           aria-label={`Decrease quantity of ${item.display.name}`}
-                          className="px-2.5 py-1 text-[color:var(--muted)] transition hover:bg-[color:var(--background)]"
+                          className="px-2.5 py-1 text-[color:var(--muted)] transition hover:bg-[color:var(--background)] active:scale-95 motion-reduce:active:scale-100"
                         >
                           −
                         </button>
@@ -143,7 +143,7 @@ export function CartDrawer() {
                           onClick={() => setQuantity(item.variantId, Math.min(item.quantity + 1, MAX_CART_QUANTITY))}
                           disabled={item.quantity >= MAX_CART_QUANTITY}
                           aria-label={`Increase quantity of ${item.display.name}`}
-                          className="px-2.5 py-1 text-[color:var(--muted)] transition hover:bg-[color:var(--background)] disabled:cursor-not-allowed disabled:opacity-40"
+                          className="px-2.5 py-1 text-[color:var(--muted)] transition hover:bg-[color:var(--background)] active:scale-95 motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           +
                         </button>
@@ -151,7 +151,7 @@ export function CartDrawer() {
                       <button
                         type="button"
                         onClick={() => removeItem(item.variantId)}
-                        className="text-xs font-medium text-[color:var(--muted)] transition hover:text-red-600 focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
+                        className="text-xs font-medium text-[color:var(--muted)] transition hover:text-red-600 active:scale-95 motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
                       >
                         Remove
                       </button>
@@ -174,7 +174,7 @@ export function CartDrawer() {
               <Link
                 href="/checkout"
                 onClick={closeCart}
-                className="mt-4 flex w-full items-center justify-center rounded-xl bg-[color:var(--brand)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--brand)]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
+                className="mt-4 flex w-full items-center justify-center rounded-xl bg-[color:var(--brand)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[color:var(--brand)]/90 active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
               >
                 Checkout
               </Link>
@@ -182,14 +182,14 @@ export function CartDrawer() {
                 <Link
                   href="/cart"
                   onClick={closeCart}
-                  className="flex-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-center text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--background)] focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
+                  className="flex-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-center text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--background)] active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
                 >
                   View cart
                 </Link>
                 <button
                   type="button"
                   onClick={closeCart}
-                  className="flex-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--background)] focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
+                  className="flex-1 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-[color:var(--foreground)] transition hover:bg-[color:var(--background)] active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
                 >
                   Continue shopping
                 </button>

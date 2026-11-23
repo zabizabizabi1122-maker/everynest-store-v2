@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
-import { requireStaff } from "@/lib/auth";
+import { getAdminAccess, requireStaff } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: { default: "Admin · EveryNest", template: "%s · Admin · EveryNest" },
@@ -24,7 +24,7 @@ export const instant = false;
  */
 function AdminShellFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-6">
+    <div className="flex min-h-screen items-center justify-center bg-[color:var(--background)] px-6">
       <p className="text-sm font-medium text-neutral-500">Loading admin panel…</p>
     </div>
   );
@@ -45,9 +45,15 @@ async function StaffArea({ children }: { children: ReactNode }) {
   await connection();
 
   const { user, profile } = await requireStaff();
+  const access = await getAdminAccess();
+  const permissions = access?.permissions ?? [];
 
   return (
-    <AdminShell userEmail={user.email ?? "signed-in user"} role={profile.role}>
+    <AdminShell
+      userEmail={user.email ?? "signed-in user"}
+      role={profile.role}
+      permissions={permissions}
+    >
       {children}
     </AdminShell>
   );

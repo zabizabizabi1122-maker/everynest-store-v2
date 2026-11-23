@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { formString, toFieldErrors, type FormActionState } from "@/lib/form-state";
 import { createClient } from "@/lib/supabase/server";
 import { supplierFormSchema } from "@/lib/suppliers";
@@ -62,7 +62,7 @@ export async function createSupplierAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireAdmin("/admin/suppliers/new");
+  await requirePermission("suppliers.manage", "/admin/suppliers/new");
 
   const raw = readSupplierForm(formData);
   const parsed = supplierFormSchema.safeParse(raw);
@@ -95,7 +95,7 @@ export async function updateSupplierAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireAdmin("/admin/suppliers");
+  await requirePermission("suppliers.manage", "/admin/suppliers");
 
   const raw = readSupplierForm(formData);
   const id = uuidSchema.safeParse(raw.id);
@@ -136,7 +136,7 @@ export async function updateSupplierAction(
 
 /** Archive or reactivate a supplier. Suppliers are never hard-deleted. */
 export async function setSupplierActiveAction(formData: FormData): Promise<void> {
-  await requireAdmin("/admin/suppliers");
+  await requirePermission("suppliers.manage", "/admin/suppliers");
 
   const id = uuidSchema.safeParse(formString(formData, "id"));
   const isActive = formString(formData, "active") === "true";

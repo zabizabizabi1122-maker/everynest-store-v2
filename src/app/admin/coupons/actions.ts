@@ -1,6 +1,9 @@
 "use server";
 
-import { requireAdmin } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { requirePermission } from "@/lib/auth";
 import { createCouponSchema } from "@/lib/coupons";
 import { type FormActionState, formString, toFieldErrors } from "@/lib/form-state";
 import { uuidSchema } from "@/lib/validators";
@@ -11,7 +14,7 @@ export async function createCouponAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireAdmin("/admin/coupons");
+  await requirePermission("coupons.manage", "/admin/coupons");
 
   const parsed = createCouponSchema.safeParse({
     code: formString(formData, "code"),
@@ -60,16 +63,19 @@ export async function createCouponAction(
     };
   }
 
+  revalidatePath("/admin/coupons");
   return { status: "success", message: `Coupon ${parsed.data.code} created.`, fieldErrors: {} };
 }
 
 /** Activates or deactivates a coupon without deleting its history. */
 export async function setCouponActiveAction(formData: FormData): Promise<void> {
-  await requireAdmin("/admin/coupons");
+  await requirePermission("coupons.manage", "/admin/coupons");
 
   const id = uuidSchema.safeParse(formString(formData, "id"));
   const active = formString(formData, "active");
-  if (!id.success || (active !== "true" && active !== "false")) return;
+  if (!id.success || (active !== "true" && active !== "false")) {
+    redirect("/admin/coupons?notice=invalid");
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -77,5 +83,10 @@ export async function setCouponActiveAction(formData: FormData): Promise<void> {
     .update({ is_active: active === "true" })
     .eq("id", id.data);
 
-  if (error) console.error("coupon status change failed", error.code, error.message);
+  if (error) {
+    console.error("coupon status change failed", error.code, error.message);
+    redirect("/admin/coupons?notice=error");
+  }
+
+  revalidatePath("/admin/coupons");
 }

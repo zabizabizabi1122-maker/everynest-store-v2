@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { secondaryButtonClass } from "@/components/ui/form";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import {
   isLowStock,
   STOCK_REASON_LABELS,
@@ -41,7 +41,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/inventory");
+  await requirePermission("inventory.view", "/admin/inventory");
 
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);

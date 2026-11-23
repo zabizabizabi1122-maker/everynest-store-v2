@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
 
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/form";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { loadCategoryTree } from "@/lib/category-data";
 import { formatPkr } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
 
-import { setProductActiveAction } from "./actions";
+import { deleteProductAction, setProductActiveAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Products · EveryNest",
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 interface ProductsPageProps {
-  searchParams: Promise<{ page?: string; q?: string; category?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; category?: string; status?: string; reason?: string }>;
 }
 
 const PAGE_SIZE = 20;
@@ -27,7 +28,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/products");
+  const { access } = await requirePermission("products.view", "/admin/products");
 
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
@@ -107,6 +108,23 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       {params.status === "error" ? (
         <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           That status change could not be saved. Please try again.
+        </p>
+      ) : null}
+      {params.status === "deleted" ? (
+        <p role="status" className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Product permanently deleted.
+        </p>
+      ) : null}
+      {params.status === "delete-blocked" ? (
+        <p role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {params.reason
+            ? `This product could not be deleted: ${params.reason}`
+            : "This product could not be deleted because it has order or stock history."}
+        </p>
+      ) : null}
+      {params.status === "delete-error" ? (
+        <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          That delete request was invalid. Please try again.
         </p>
       ) : null}
       {error ? (
@@ -233,6 +251,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                               {product.is_active ? "Deactivate" : "Activate"}
                             </button>
                           </form>
+                          {access.permissions.includes("products.delete") ? (
+                            <form action={deleteProductAction}>
+                              <input type="hidden" name="id" value={product.id} />
+                              <ConfirmDeleteButton
+                                label="Delete"
+                                confirmText={`Permanently delete ${product.name}? This cannot be undone.`}
+                              />
+                            </form>
+                          ) : null}
                         </div>
                       </td>
                     </tr>

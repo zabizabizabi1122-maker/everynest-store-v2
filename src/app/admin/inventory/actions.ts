@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { formString, toFieldErrors, type FormActionState } from "@/lib/form-state";
 import { describeStockError, stockAdjustmentSchema } from "@/lib/inventory";
 import { createClient } from "@/lib/supabase/server";
@@ -17,7 +17,7 @@ export async function adjustStockAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireStaff("/admin/inventory");
+  await requirePermission("inventory.manage", "/admin/inventory");
 
   const raw = {
     variantId: formString(formData, "variantId"),

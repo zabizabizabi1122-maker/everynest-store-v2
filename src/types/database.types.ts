@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -12,33 +12,51 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.18"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
+      admin_permissions: {
+        Row: {
+          admin_id: string
+          created_at: string
+          granted_by: string | null
+          permission_key: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          granted_by?: string | null
+          permission_key: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          granted_by?: string | null
+          permission_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_permissions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -76,6 +94,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      auth_login_throttle: {
+        Row: {
+          blocked_until: string | null
+          failures: number
+          first_failed_at: string
+          key: string
+          last_failed_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          failures?: number
+          first_failed_at?: string
+          key: string
+          last_failed_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          failures?: number
+          first_failed_at?: string
+          key?: string
+          last_failed_at?: string
+        }
+        Relationships: []
       }
       categories: {
         Row: {
@@ -212,6 +254,191 @@ export type Database = {
         }
         Relationships: []
       }
+      email_verification_throttle: {
+        Row: {
+          created_at: string
+          email: string
+          requested_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          requested_at: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          requested_at?: string
+        }
+        Relationships: []
+      }
+      filter_categories: {
+        Row: {
+          category_id: string
+          filter_id: string
+        }
+        Insert: {
+          category_id: string
+          filter_id: string
+        }
+        Update: {
+          category_id?: string
+          filter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filter_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filter_categories_filter_id_fkey"
+            columns: ["filter_id"]
+            isOneToOne: false
+            referencedRelation: "filter_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      filter_definitions: {
+        Row: {
+          applies_to_all: boolean
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          is_multiple: boolean
+          key: string
+          label: string
+          source_key: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          applies_to_all?: boolean
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_multiple?: boolean
+          key: string
+          label: string
+          source_key?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          applies_to_all?: boolean
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_multiple?: boolean
+          key?: string
+          label?: string
+          source_key?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      filter_options: {
+        Row: {
+          color_hex: string | null
+          created_at: string
+          display_order: number
+          filter_id: string
+          id: string
+          is_active: boolean
+          label: string
+          value: string
+        }
+        Insert: {
+          color_hex?: string | null
+          created_at?: string
+          display_order?: number
+          filter_id: string
+          id?: string
+          is_active?: boolean
+          label: string
+          value: string
+        }
+        Update: {
+          color_hex?: string | null
+          created_at?: string
+          display_order?: number
+          filter_id?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filter_options_filter_id_fkey"
+            columns: ["filter_id"]
+            isOneToOne: false
+            referencedRelation: "filter_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hero_slides: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          eyebrow: string | null
+          id: string
+          image: string
+          image_alt: string | null
+          is_active: boolean
+          primary_href: string
+          primary_label: string
+          secondary_href: string | null
+          secondary_label: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          eyebrow?: string | null
+          id?: string
+          image: string
+          image_alt?: string | null
+          is_active?: boolean
+          primary_href?: string
+          primary_label: string
+          secondary_href?: string | null
+          secondary_label?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          eyebrow?: string | null
+          id?: string
+          image?: string
+          image_alt?: string | null
+          is_active?: boolean
+          primary_href?: string
+          primary_label?: string
+          secondary_href?: string | null
+          secondary_label?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string
@@ -343,6 +570,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      password_reset_throttle: {
+        Row: {
+          created_at: string
+          email: string
+          requested_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          requested_at: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          requested_at?: string
+        }
+        Relationships: []
+      }
+      permissions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          is_active: boolean
+          key: string
+          label: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          is_active?: boolean
+          key: string
+          label: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          is_active?: boolean
+          key?: string
+          label?: string
+        }
+        Relationships: []
       }
       product_images: {
         Row: {
@@ -478,6 +750,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          is_active: boolean
           phone: string | null
           role: string
           updated_at: string
@@ -486,6 +759,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          is_active?: boolean
           phone?: string | null
           role?: string
           updated_at?: string
@@ -494,6 +768,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          is_active?: boolean
           phone?: string | null
           role?: string
           updated_at?: string
@@ -567,6 +842,29 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          permission_key: string
+          role: string
+        }
+        Insert: {
+          permission_key: string
+          role: string
+        }
+        Update: {
+          permission_key?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_key_fkey"
+            columns: ["permission_key"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       saved_addresses: {
         Row: {
           address: string
@@ -613,6 +911,56 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sort_options: {
+        Row: {
+          display_order: number
+          is_active: boolean
+          key: string
+          label: string
+        }
+        Insert: {
+          display_order?: number
+          is_active?: boolean
+          key: string
+          label: string
+        }
+        Update: {
+          display_order?: number
+          is_active?: boolean
+          key?: string
+          label?: string
+        }
+        Relationships: []
       }
       stock_movements: {
         Row: {
@@ -776,9 +1124,52 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      can_request_email_verification: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
+      can_request_password_reset: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
+      check_login_allowed: {
+        Args: { p_email: string; p_ip_hash: string }
+        Returns: boolean
+      }
+      claim_admin_account: {
+        Args: {
+          p_full_name: string
+          p_permissions?: string[]
+          p_phone?: string
+          p_role?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      delete_admin_account: { Args: { p_admin_id: string }; Returns: Json }
+      delete_category: { Args: { p_category_id: string }; Returns: Json }
+      delete_product: { Args: { p_product_id: string }; Returns: Json }
+      get_admin_account: { Args: { p_admin_id: string }; Returns: Json }
+      get_my_admin_access: { Args: never; Returns: Json }
       get_order: { Args: { p_order_id: string }; Returns: Json }
+      get_order_internal: { Args: { p_order_id: string }; Returns: Json }
       get_reports_data: { Args: { p_days?: number }; Returns: Json }
+      get_reports_data_internal: { Args: { p_days?: number }; Returns: Json }
+      list_admin_accounts: {
+        Args: { p_role?: string; p_search?: string; p_status?: string }
+        Returns: Json
+      }
+      list_admin_permissions: { Args: never; Returns: Json }
       list_orders: {
+        Args: {
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      list_orders_internal: {
         Args: {
           p_page?: number
           p_page_size?: number
@@ -801,11 +1192,23 @@ export type Database = {
         }
         Returns: Json
       }
+      record_login_attempt: {
+        Args: { p_email: string; p_ip_hash: string; p_success: boolean }
+        Returns: undefined
+      }
+      set_admin_active: {
+        Args: { p_admin_id: string; p_is_active: boolean }
+        Returns: Json
+      }
       set_default_address: {
         Args: { p_address_id: string }
         Returns: undefined
       }
       set_review_status: {
+        Args: { p_review_id: string; p_status: string }
+        Returns: undefined
+      }
+      set_review_status_internal: {
         Args: { p_review_id: string; p_status: string }
         Returns: undefined
       }
@@ -820,6 +1223,21 @@ export type Database = {
       }
       transition_order_status: {
         Args: { p_order_id: string; p_target_status: string }
+        Returns: Json
+      }
+      transition_order_status_internal: {
+        Args: { p_order_id: string; p_target_status: string }
+        Returns: Json
+      }
+      update_admin_account: {
+        Args: {
+          p_admin_id: string
+          p_full_name: string
+          p_is_active?: boolean
+          p_permissions?: string[]
+          p_phone?: string
+          p_role?: string
+        }
         Returns: Json
       }
       validate_coupon: { Args: { p_code: string }; Returns: Json }
@@ -951,9 +1369,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { categoryHasVariants, loadCategoryTree } from "@/lib/category-data";
 import {
   descendantIds,
@@ -82,7 +82,7 @@ export async function createCategoryAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireStaff("/admin/categories/new");
+  await requirePermission("categories.manage", "/admin/categories/new");
 
   const raw = readCategoryForm(formData);
   const parsed = categoryFormSchema.safeParse(raw);
@@ -136,7 +136,7 @@ export async function updateCategoryAction(
   _previousState: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  await requireStaff("/admin/categories");
+  await requirePermission("categories.manage", "/admin/categories");
 
   const raw = readCategoryForm(formData);
   const id = uuidSchema.safeParse(raw.id);
@@ -265,7 +265,7 @@ export async function updateCategoryAction(
 
 /** Archive or reactivate a category. No category is ever hard-deleted. */
 export async function setCategoryActiveAction(formData: FormData): Promise<void> {
-  await requireStaff("/admin/categories");
+  await requirePermission("categories.manage", "/admin/categories");
 
   const id = uuidSchema.safeParse(formString(formData, "id"));
   const isActive = formString(formData, "active") === "true";
@@ -288,4 +288,27 @@ export async function setCategoryActiveAction(formData: FormData): Promise<void>
   revalidatePath("/admin/categories");
   revalidatePath(`/admin/categories/${id.data}`);
   redirect(`/admin/categories?status=${error ? "error" : "updated"}`);
+}
+
+/**
+ * Permanently deletes a category through the trusted RPC. The RPC refuses
+ * categories with children, products or storefront filter assignments.
+ */
+export async function deleteCategoryAction(formData: FormData): Promise<void> {
+  await requirePermission("categories.delete", "/admin/categories");
+
+  const id = uuidSchema.safeParse(formString(formData, "id"));
+  if (!id.success) redirect("/admin/categories?status=delete-error");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("delete_category", { p_category_id: id.data });
+
+  if (error) {
+    console.error("Category delete failed", error.code, error.message);
+    const reason = encodeURIComponent(error.message.slice(0, 180));
+    redirect(`/admin/categories?status=delete-blocked&reason=${reason}`);
+  }
+
+  revalidatePath("/admin/categories");
+  redirect("/admin/categories?status=deleted");
 }

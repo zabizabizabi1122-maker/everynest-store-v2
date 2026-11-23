@@ -4,8 +4,9 @@ import { z } from "zod";
  * Public environment validation.
  *
  * EveryNest only needs the Supabase project URL and the public
- * (publishable/anon) key in the browser and on the server. Secrets such as the
- * Supabase secret key are intentionally NOT part of this project.
+ * (publishable/anon) key in the browser and on the server. The optional
+ * SUPABASE_SERVICE_ROLE_KEY is read directly by a server-only helper for Admin
+ * Management and is never exposed through this public configuration object.
  *
  * Validation is lazy on purpose:
  *  - `next build` must work before a developer has created `.env.local`.

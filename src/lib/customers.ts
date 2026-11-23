@@ -12,7 +12,7 @@ import { isAppRole } from "@/lib/roles";
 
 export const CUSTOMER_PAGE_SIZE = 20;
 
-export const customerRoleSchema = z.enum(["customer", "staff", "admin"]);
+export const customerRoleSchema = z.enum(["customer", "admin", "super_admin"]);
 
 export type CustomerRole = z.infer<typeof customerRoleSchema>;
 

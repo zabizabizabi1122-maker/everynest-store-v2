@@ -10,6 +10,8 @@
   --primary-hover: #264d42;
   --accent: #d9733f;
   --border: #e8e1d6;
+  /* Slightly deeper warm tint for admin hover/focus surfaces. */
+  --surface-warm: #f6efe4;
   --footer: #1f3b33;
 
   /* Compatibility aliases: keeps shared admin/auth/account screens readable
@@ -27,6 +29,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-accent: var(--accent);
   --color-border: var(--border);
+  --color-surface-warm: var(--surface-warm);
   --color-footer: var(--footer);
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
@@ -59,6 +62,134 @@ h6 {
   outline-offset: 2px;
 }
 
+/* Storefront header: soft layered surface with an accent hairline. Colours
+   stay driven by the shared palette variables. */
+.site-header {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 97%, var(--primary)),
+    color-mix(in srgb, var(--surface) 88%, var(--background))
+  );
+  box-shadow: 0 12px 30px -24px rgba(31, 59, 51, 0.55);
+}
+
+.header-accent-line {
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--primary) 55%, transparent) 35%,
+    var(--accent) 50%,
+    color-mix(in srgb, var(--primary) 55%, transparent) 65%,
+    transparent
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.brand-link {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.brand-link:hover {
+  opacity: 0.82;
+  transform: translateY(-1px);
+}
+
+.nav-pill {
+  background: transparent;
+}
+
+.nav-pill:hover {
+  background: color-mix(in srgb, var(--surface) 88%, var(--primary));
+  box-shadow: 0 1px 4px -2px rgba(31, 59, 51, 0.4);
+}
+
+.nav-pill[data-active="true"] {
+  background: color-mix(in srgb, var(--surface) 82%, var(--primary));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent),
+    0 1px 4px -2px rgba(31, 59, 51, 0.4);
+}
+
+.nav-cta,
+.hero-cta-primary {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary) 82%, var(--accent)),
+    var(--primary) 65%
+  );
+}
+
+.nav-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-pill:hover .nav-pill-dot,
+.nav-pill[data-active="true"] .nav-pill-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.search-submit {
+  box-shadow: 0 2px 6px -2px rgba(31, 59, 51, 0.5);
+}
+
+.promo-bar {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    var(--primary-hover),
+    var(--primary) 50%,
+    var(--primary-hover)
+  );
+}
+
+.promo-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+  transform: translateX(-100%);
+  animation: promo-shine 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.promo-sparkle {
+  animation: promo-sparkle 2.8s ease-in-out infinite;
+}
+
+@keyframes promo-shine {
+  0%,
+  60% {
+    transform: translateX(-100%);
+  }
+  82%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes promo-sparkle {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
@@ -81,6 +212,56 @@ h6 {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-image-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes hero-glow {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate3d(2%, -2%, 0) scale(1.08);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes grow-bar {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--bar-width, 0%);
+  }
+}
+
 .animate-toast-in {
   animation: toast-in 0.25s ease-out both;
 }
@@ -89,9 +270,149 @@ h6 {
   animation: slide-in 0.35s ease-out both;
 }
 
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out both;
+}
+
+.animate-hero-image {
+  animation: hero-image-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-hero-glow {
+  animation: hero-glow 12s ease-in-out infinite;
+}
+
+.animate-drawer-in {
+  animation: drawer-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sales-bar {
+  width: 0;
+  animation: grow-bar 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Viewport reveals. Content stays in the DOM and is only visually staggered;
+   transform/opacity avoid layout shift. */
+.reveal {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal:not(.is-visible) {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  .reveal {
+    transition:
+      opacity 0.5s ease var(--reveal-delay, 0ms),
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+  }
+}
+
+/* Animated underline on existing navigation links. */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.35rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after,
+.nav-link[data-active="true"]::after {
+  transform: scaleX(1);
+}
+
+/* Keep the mobile dropdown mounted so it can animate closed as well as open. */
+.mobile-menu-panel {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.98);
+  transform-origin: top right;
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.22s;
+}
+
+.mobile-menu-panel[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-toast-in,
-  .animate-slide-in {
+  .animate-slide-in,
+  .animate-fade-in,
+  .animate-hero-image,
+  .animate-hero-glow,
+  .animate-drawer-in,
+  .sales-bar {
+    animation: none !important;
+    width: var(--bar-width, 0%) !important;
+  }
+
+  .reveal,
+  .reveal:not(.is-visible) {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .nav-link::after {
+    transition: none;
+  }
+
+  .mobile-menu-panel {
+    transition: none;
+  }
+
+  .promo-bar::before,
+  .promo-sparkle {
     animation: none;
+  }
+
+  .promo-bar::before {
+    display: none;
+  }
+
+  .brand-link,
+  .nav-pill,
+  .nav-pill-dot,
+  .nav-cta {
+    transition: none;
+  }
+}
+
+/* No-script fallback: never hide content when JavaScript is unavailable. */
+@media (scripting: none) {
+  .reveal,
+  .reveal:not(.is-visible) {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .mobile-menu-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .sales-bar {
+    width: var(--bar-width, 0%) !important;
   }
 }

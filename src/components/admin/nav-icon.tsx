@@ -10,7 +10,11 @@ export type AdminNavIconName =
   | "customers"
   | "reports"
   | "coupons"
-  | "reviews";
+  | "reviews"
+  | "filters"
+  | "settings"
+  | "admins"
+  | "profile";
 
 /**
  * Inline line icons (no icon package was approved for this project).
@@ -83,6 +87,32 @@ const PATHS: Record<AdminNavIconName, ReactNode> = {
     <>
       <path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10Z" />
       <path d="M8 9h8M8 12h5" />
+    </>
+  ),
+  filters: (
+    <>
+      <path d="M4 5h16M7 12h10M10 19h4" />
+      <circle cx="9" cy="5" r="2" />
+      <circle cx="15" cy="12" r="2" />
+    </>
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21h-4v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3v-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3h4v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+    </>
+  ),
+  admins: (
+    <>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3A4.5 4.5 0 0 1 15 18.5V20" />
+      <path d="M17 8v6M14 11h6" />
+    </>
+  ),
+  profile: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
     </>
   ),
 };

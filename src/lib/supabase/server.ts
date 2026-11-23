@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
+import { getAuthCookieOptions } from "@/lib/auth-security";
 import { getPublicEnv } from "@/lib/env";
 import type { Database } from "@/types/database.types";
 
@@ -18,6 +19,7 @@ export async function createClient() {
   const { url, publishableKey } = getPublicEnv();
 
   return createServerClient<Database>(url, publishableKey, {
+    cookieOptions: getAuthCookieOptions(),
     cookies: {
       getAll() {
         return cookieStore.getAll();

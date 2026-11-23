@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 
-import { HeroCarousel } from "@/components/store/hero-carousel";
+import { defaultHeroSlides, HeroCarousel, type HeroSlide } from "@/components/store/hero-carousel";
 import { ProductCard } from "@/components/store/product-card";
 import { ProductImage } from "@/components/store/product-image";
 import { loadFeaturedProducts, loadLatestProducts, loadPublicCategories } from "@/lib/catalog";
 import type { CatalogCategory } from "@/lib/catalog";
+import { loadActiveHeroSlides } from "@/lib/site-settings";
+import { Reveal } from "@/components/ui/reveal";
 
 /**
  * Live catalogue data is read during render, so this page is deliberately
@@ -123,21 +125,27 @@ function ProductSection({
 }) {
   return (
     <section aria-labelledby={id} className="py-10 lg:py-16">
-      <SectionHeading
-        eyebrow="From the catalogue"
-        id={id}
-        title={title}
-        description={description}
-      />
+      <Reveal>
+        <SectionHeading
+          eyebrow="From the catalogue"
+          id={id}
+          title={title}
+          description={description}
+        />
+      </Reveal>
 
       {products.length === 0 ? (
-        <p className="mt-6 rounded-xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-10 text-center text-sm text-[color:var(--muted)]">
-          No products here yet. Check back soon.
-        </p>
+        <Reveal className="mt-6">
+          <p className="rounded-xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-10 text-center text-sm text-[color:var(--muted)]">
+            No products here yet. Check back soon.
+          </p>
+        </Reveal>
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
           {products.map((product, index) => (
-            <ProductCard key={product.id} product={product} priority={index < 4} />
+            <Reveal key={product.id} className="h-full" delay={index * 50}>
+              <ProductCard product={product} priority={index < 4} />
+            </Reveal>
           ))}
         </div>
       )}
@@ -148,10 +156,11 @@ function ProductSection({
 export default async function HomePage() {
   await connection();
 
-  const [categories, featured, latest] = await Promise.all([
+  const [categories, featured, latest, storedSlides] = await Promise.all([
     loadPublicCategories(),
     loadFeaturedProducts(),
     loadLatestProducts(),
+    loadActiveHeroSlides(),
   ]);
 
   // Three real departments, with the usual storefront order first.
@@ -161,53 +170,73 @@ export default async function HomePage() {
   const roots = categories.filter((category) => category.parentId === null);
   const categoryCards = [...preferred, ...roots.filter((item) => !preferred.some((pick) => pick.id === item.id))].slice(0, 3);
 
+  // The catalogue filters by category id, so resolve the "clothes" slide link
+  // from live data instead of passing a slug that would be silently ignored.
+  const clothingHref = preferred[0]
+    ? `/products?category=${encodeURIComponent(preferred[0].id)}`
+    : "/products";
+  // Stored slides win; the original hardcoded slides remain the graceful
+  // fallback while no active slides exist. The real clothing category link is
+  // reapplied to any slide with the "Explore clothing" call to action.
+  const sourceSlides = storedSlides.length > 0 ? storedSlides : defaultHeroSlides;
+  const heroSlides: HeroSlide[] = sourceSlides.map((slide) =>
+    slide.primary.label.trim().toLowerCase() === "explore clothing"
+      ? { ...slide, primary: { ...slide.primary, href: clothingHref } }
+      : slide,
+  );
+
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 pb-20 sm:px-6">
       <div className="pt-6 lg:pt-10">
-        <HeroCarousel />
+        <HeroCarousel slides={heroSlides} />
       </div>
 
       <section aria-labelledby="categories-heading" className="py-10 lg:py-16">
-        <SectionHeading
-          eyebrow="Browse the store"
-          id="categories-heading"
-          title="Shop by category"
-          description="Find what you need across our departments."
-        />
+        <Reveal>
+          <SectionHeading
+            eyebrow="Browse the store"
+            id="categories-heading"
+            title="Shop by category"
+            description="Find what you need across our departments."
+          />
+        </Reveal>
 
         {categoryCards.length === 0 ? (
-          <p className="mt-6 rounded-xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-10 text-center text-sm text-[color:var(--muted)]">
-            Categories will appear here once they are published.
-          </p>
+          <Reveal className="mt-6">
+            <p className="rounded-xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface)] px-6 py-10 text-center text-sm text-[color:var(--muted)]">
+              Categories will appear here once they are published.
+            </p>
+          </Reveal>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {categoryCards.map((category) => (
-              <Link
-                key={category.id}
-                href={`/products?category=${encodeURIComponent(category.id)}`}
-                className="group overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden bg-[color:var(--background)]">
-                  <ProductImage
-                    src={CATEGORY_IMAGES[category.slug] ?? null}
-                    alt={category.name}
-                    sizes="(max-width: 640px) 100vw, 33vw"
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-3 px-4 py-4">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-heading text-lg font-medium text-foreground transition group-hover:text-[color:var(--primary)]">
-                      {category.name}
-                    </h3>
-                    <p className="mt-0.5 text-sm text-[color:var(--muted)]">Explore the collection</p>
+            {categoryCards.map((category, index) => (
+              <Reveal key={category.id} className="h-full" delay={index * 70}>
+                <Link
+                  href={`/products?category=${encodeURIComponent(category.id)}`}
+                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[color:var(--background)]">
+                    <ProductImage
+                      src={CATEGORY_IMAGES[category.slug] ?? null}
+                      alt={category.name}
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                    />
                   </div>
-                  <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full border border-[color:var(--border)] text-[color:var(--primary)] transition group-hover:bg-[color:var(--primary)] group-hover:text-white">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4">
-                      <path d="m9 18 6-6-6-6" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
+                  <div className="flex flex-1 items-center justify-between gap-3 px-4 py-4">
+                    <div className="min-w-0">
+                      <h3 className="truncate font-heading text-lg font-medium text-foreground transition group-hover:text-[color:var(--primary)]">
+                        {category.name}
+                      </h3>
+                      <p className="mt-0.5 text-sm text-[color:var(--muted)]">Explore the collection</p>
+                    </div>
+                    <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full border border-[color:var(--border)] text-[color:var(--primary)] transition group-hover:bg-[color:var(--primary)] group-hover:text-white">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4">
+                        <path d="m9 18 6-6-6-6" />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              </Reveal>
             ))}
           </div>
         )}
@@ -222,18 +251,20 @@ export default async function HomePage() {
 
       <section aria-label="Shopping benefits" className="border-y border-[color:var(--border)] bg-[color:var(--surface)] py-10 lg:py-12">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {BENEFITS.map((benefit) => (
-            <div key={benefit.title} className="flex items-center gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[color:var(--background)] text-[color:var(--primary)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className="size-5">
-                  {benefit.icon}
-                </svg>
-              </span>
-              <span>
-                <span className="block font-heading text-sm font-semibold text-foreground">{benefit.title}</span>
-                <span className="block text-sm text-[color:var(--muted)]">{benefit.subtitle}</span>
-              </span>
-            </div>
+          {BENEFITS.map((benefit, index) => (
+            <Reveal key={benefit.title} delay={index * 60}>
+              <div className="flex items-center gap-3">
+                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[color:var(--background)] text-[color:var(--primary)]">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className="size-5">
+                    {benefit.icon}
+                  </svg>
+                </span>
+                <span>
+                  <span className="block font-heading text-sm font-semibold text-foreground">{benefit.title}</span>
+                  <span className="block text-sm text-[color:var(--muted)]">{benefit.subtitle}</span>
+                </span>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>

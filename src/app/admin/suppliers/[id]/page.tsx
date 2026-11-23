@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { STOCK_REASON_LABELS, type StockReason } from "@/lib/inventory";
 import { createClient } from "@/lib/supabase/server";
 import { uuidSchema } from "@/lib/validators";
@@ -25,7 +25,7 @@ export default async function EditSupplierPage({ params, searchParams }: EditSup
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireAdmin("/admin/suppliers");
+  await requirePermission("suppliers.view", "/admin/suppliers");
 
   const { id } = await params;
   const { saved } = await searchParams;

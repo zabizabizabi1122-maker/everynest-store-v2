@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 
 import { secondaryButtonClass } from "@/components/ui/form";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { loadCustomerList } from "@/lib/customer-data";
 import {
   CUSTOMER_PAGE_SIZE,
@@ -31,8 +31,8 @@ const ROLE_FILTERS: ReadonlyArray<{
 }> = [
   { value: null, label: "All accounts" },
   { value: "customer", label: "Customers" },
-  { value: "staff", label: "Staff" },
   { value: "admin", label: "Admins" },
+  { value: "super_admin", label: "Super Admins" },
 ];
 
 function customersHref(
@@ -55,8 +55,8 @@ function formatJoined(iso: string): string {
 }
 
 function roleBadgeClass(role: CustomerRole): string {
-  if (role === "admin") return "bg-purple-50 text-purple-700";
-  if (role === "staff") return "bg-amber-50 text-amber-700";
+  if (role === "super_admin") return "bg-purple-50 text-purple-700";
+  if (role === "admin") return "bg-amber-50 text-amber-700";
   return "bg-neutral-100 text-neutral-600";
 }
 
@@ -67,7 +67,7 @@ export default async function AdminCustomersPage({
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/customers");
+  await requirePermission("customers.view", "/admin/customers");
 
   const params = await searchParams;
   const search = sanitizeCustomerSearch(params.q);

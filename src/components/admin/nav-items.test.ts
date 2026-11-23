@@ -3,49 +3,30 @@ import { describe, expect, it } from "vitest";
 import { ADMIN_NAV } from "./nav-items";
 
 describe("admin navigation", () => {
-  it("keeps the required sidebar order and appends approved Level 11/12 screens", () => {
-    expect(ADMIN_NAV.map((item) => item.label)).toEqual([
-      "Dashboard",
-      "Categories",
-      "Products",
-      "Inventory",
-      "Suppliers",
-      "Orders",
-      "Customers",
-      "Reports",
-      "Coupons",
-      "Reviews",
-    ]);
-  });
-
   it("uses unique hrefs under /admin", () => {
     const hrefs = ADMIN_NAV.map((item) => item.href);
-
     expect(new Set(hrefs).size).toBe(hrefs.length);
     for (const href of hrefs) expect(href.startsWith("/admin")).toBe(true);
   });
 
-  it("only links to screens that actually exist", () => {
-    const available = ADMIN_NAV.filter((item) => item.available);
-
-    expect(available.map((item) => item.href)).toEqual([
-      "/admin",
-      "/admin/categories",
-      "/admin/products",
-      "/admin/inventory",
-      "/admin/suppliers",
-      "/admin/orders",
-      "/admin/customers",
-      "/admin/reports",
-      "/admin/coupons",
-      "/admin/reviews",
-    ]);
-    for (const item of available) expect(item.level).toBeLessThanOrEqual(12);
+  it("assigns a permission key to every item", () => {
+    for (const item of ADMIN_NAV) {
+      expect(item.permission).toMatch(/^[a-z][a-z0-9_.]*$/);
+    }
   });
 
-  it("records a future level for every locked screen", () => {
-    for (const item of ADMIN_NAV.filter((entry) => !entry.available)) {
-      expect(item.level).toBeGreaterThan(3);
+  it("exposes Admin Management as an available section", () => {
+    const admins = ADMIN_NAV.find((item) => item.href === "/admin/admins");
+    expect(admins).toBeDefined();
+    expect(admins?.available).toBe(true);
+    expect(admins?.permission).toBe("admins.view");
+    expect(admins?.badge).toBeUndefined();
+  });
+
+  it("links to the newly available management screens", () => {
+    const available = ADMIN_NAV.filter((item) => item.available);
+    for (const href of ["/admin/admins", "/admin/filters", "/admin/settings", "/admin/profile"]) {
+      expect(available.some((item) => item.href === href)).toBe(true);
     }
   });
 });

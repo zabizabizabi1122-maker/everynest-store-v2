@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { formString, toFieldErrors } from "@/lib/form-state";
 import {
   describeOrderError,
@@ -23,7 +23,7 @@ export async function transitionOrderStatusAction(
   _previousState: OrderActionState,
   formData: FormData,
 ): Promise<OrderActionState> {
-  await requireStaff("/admin/orders");
+  await requirePermission("orders.manage", "/admin/orders");
 
   const raw = {
     orderId: formString(formData, "orderId"),

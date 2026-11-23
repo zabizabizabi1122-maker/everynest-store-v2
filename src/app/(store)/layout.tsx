@@ -12,6 +12,12 @@ import { ScrollToTop } from "@/components/store/scroll-to-top";
 import { SearchForm } from "@/components/store/search-form";
 import { ToastProvider } from "@/components/store/toast";
 import { loadPublicCategories } from "@/lib/catalog";
+import {
+  formatPromoMessage,
+  isHttpUrl,
+  loadSiteSettings,
+  type SocialIcon as SocialIconName,
+} from "@/lib/site-settings";
 
 /**
  * Category navigation is loaded per request, so this layout cannot be
@@ -22,6 +28,27 @@ export const instant = false;
 
 const footerLinkClass = "block py-1.5 text-sm text-white/70 transition hover:text-white";
 
+const socialGlyphs: Record<SocialIconName, ReactNode> = {
+  instagram: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  facebook: <path d="M14 8h3V4h-3a5 5 0 0 0-5 5v3H6v4h3v6h4v-6h3l1-4h-4V9a1 1 0 0 1 1-1Z" />,
+  twitter: <path d="M4 8c4 0 8 3 8 8 0-5 4-8 8-8M5 17h14" />,
+};
+
+/** Same SVG shapes as before; only the wrapper changes when a URL exists. */
+function SocialGlyph({ icon }: { icon: SocialIconName }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" className="size-4">
+      {socialGlyphs[icon]}
+    </svg>
+  );
+}
+
 /**
  * Customer storefront shell: category navigation, search and the
  * non-authoritative client cart. Authentication lives in the admin panel.
@@ -30,21 +57,32 @@ export default async function StoreLayout({ children }: { children: ReactNode })
   // Catalogue reads are request-bound; keep this shell out of the prerender.
   await connection();
 
-  const categories = await loadPublicCategories();
+  const [categories, settings] = await Promise.all([
+    loadPublicCategories(),
+    loadSiteSettings(),
+  ]);
+  const { promo, contact, socials } = settings;
 
   const departmentHref = (slug: string) => {
     const category = categories.find((item) => item.slug === slug && item.parentId === null);
     return category ? `/products?category=${encodeURIComponent(category.id)}` : "/products";
   };
 
+  const phoneDigits = contact.phone.replace(/[^+\d]/g, "");
+  const whatsappDigits = contact.whatsapp.replace(/\D/g, "");
+
   return (
     <ToastProvider>
       <CartProvider>
-        <PromoBar />
-        <header className="sticky top-0 z-30 border-b border-[color:var(--border)] bg-[color:var(--surface)]/95 backdrop-blur">
+        <PromoBar message={formatPromoMessage(promo)} enabled={promo.enabled} />
+        <header className="site-header sticky top-0 z-30 border-b border-[color:var(--border)] backdrop-blur">
           <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6">
-            <div className="flex items-center gap-2 py-3">
-              <Link href="/" className="shrink-0" aria-label="EveryNest home">
+            <div className="flex items-center gap-3 py-3.5 sm:gap-5">
+              <Link
+                href="/"
+                className="brand-link shrink-0 rounded-lg"
+                aria-label="EveryNest home"
+              >
                 <BrandMark variant="dark" size="md" />
               </Link>
 
@@ -52,19 +90,20 @@ export default async function StoreLayout({ children }: { children: ReactNode })
                 <CategoryMenu categories={categories} />
               </div>
 
-              <div className="hidden w-52 sm:block lg:w-64">
-                <SearchForm />
+              <div className="hidden w-52 sm:block lg:w-72">
+                <SearchForm id="store-search-desktop" />
               </div>
 
-              <div className="ml-auto flex items-center gap-1.5 sm:ml-0">
+              <div className="ml-auto flex items-center gap-2 sm:ml-0">
                 <CartButton />
               </div>
             </div>
 
             <div className="pb-3 sm:hidden">
-              <SearchForm />
+              <SearchForm id="store-search-mobile" />
             </div>
           </div>
+          <span className="header-accent-line" aria-hidden="true" />
         </header>
 
         <CartDrawer />
@@ -80,23 +119,33 @@ export default async function StoreLayout({ children }: { children: ReactNode })
                   shoes with clear prices and nationwide delivery.
                 </p>
                 <div className="mt-5 flex items-center gap-2" aria-label="Follow EveryNest">
-                  <span className="grid size-9 place-items-center rounded-full border border-white/20 text-white/70" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4">
-                      <rect x="3" y="3" width="18" height="18" rx="5" />
-                      <circle cx="12" cy="12" r="4" />
-                      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-                    </svg>
-                  </span>
-                  <span className="grid size-9 place-items-center rounded-full border border-white/20 text-white/70" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4">
-                      <path d="M14 8h3V4h-3a5 5 0 0 0-5 5v3H6v4h3v6h4v-6h3l1-4h-4V9a1 1 0 0 1 1-1Z" />
-                    </svg>
-                  </span>
-                  <span className="grid size-9 place-items-center rounded-full border border-white/20 text-white/70" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4">
-                      <path d="M4 8c4 0 8 3 8 8 0-5 4-8 8-8M5 17h14" />
-                    </svg>
-                  </span>
+                  {socials.map((social, index) => {
+                    const glyphClass = "grid size-9 place-items-center rounded-full border border-white/20 text-white/70";
+                    const key = `${social.icon}-${index}`;
+
+                    // A blank or malformed URL stays decorative instead of
+                    // becoming a dead or unsafe link.
+                    if (!isHttpUrl(social.url)) {
+                      return (
+                        <span key={key} className={glyphClass} aria-hidden="true">
+                          <SocialGlyph icon={social.icon} />
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <a
+                        key={key}
+                        href={social.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Follow EveryNest on ${social.label}`}
+                        className={`${glyphClass} transition hover:border-white/40 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white`}
+                      >
+                        <SocialGlyph icon={social.icon} />
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -119,15 +168,34 @@ export default async function StoreLayout({ children }: { children: ReactNode })
 
               <div>
                 <h2 className="font-heading text-sm font-semibold uppercase tracking-[0.16em] text-white">Contact</h2>
-                <p className="mt-3 text-sm leading-relaxed text-white/70">
-                  EveryNest · Pakistan
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-white/70">
-                  Nationwide delivery and cash on delivery on every order.
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-white/70">
-                  Order help is available from our support team.
-                </p>
+                {contact.tagline ? (
+                  <p className="mt-3 text-sm leading-relaxed text-white/70">{contact.tagline}</p>
+                ) : null}
+                {contact.note ? (
+                  <p className="mt-2 text-sm leading-relaxed text-white/70">{contact.note}</p>
+                ) : null}
+                {contact.help ? (
+                  <p className="mt-2 text-sm leading-relaxed text-white/70">{contact.help}</p>
+                ) : null}
+                {contact.email ? (
+                  <a href={`mailto:${contact.email}`} className={footerLinkClass}>{contact.email}</a>
+                ) : null}
+                {contact.phone && phoneDigits ? (
+                  <a href={`tel:${phoneDigits}`} className={footerLinkClass}>{contact.phone}</a>
+                ) : null}
+                {contact.whatsapp && whatsappDigits ? (
+                  <a
+                    href={`https://wa.me/${whatsappDigits}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={footerLinkClass}
+                  >
+                    {contact.whatsapp}
+                  </a>
+                ) : null}
+                {contact.address ? (
+                  <p className="mt-2 text-sm leading-relaxed text-white/70">{contact.address}</p>
+                ) : null}
               </div>
             </div>
 

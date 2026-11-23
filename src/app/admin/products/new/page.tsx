@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { categorySchemaMap, loadCategoryTree } from "@/lib/category-data";
 
 import { ProductForm } from "../product-form";
@@ -17,7 +17,7 @@ export default async function NewProductPage() {
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/products/new");
+  await requirePermission("products.view", "/admin/products/new");
 
   const categories = await loadCategoryTree();
   const active = categories.filter((category) => category.is_active);

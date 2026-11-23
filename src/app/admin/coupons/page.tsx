@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 
-import { requireAdmin } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { formatDecimalPaisa } from "@/lib/checkout";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,13 +14,18 @@ export const metadata: Metadata = {
 
 export const instant = false;
 
-export default async function AdminCouponsPage() {
+export default async function AdminCouponsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string }>;
+}) {
   // Supabase's token-expiry check reads Date.now(); mark this page
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireAdmin("/admin/coupons");
+  await requirePermission("coupons.view", "/admin/coupons");
 
+  const { notice } = await searchParams;
   const supabase = await createClient();
   const { data: coupons, error } = await supabase
     .from("coupons")
@@ -38,6 +43,13 @@ export default async function AdminCouponsPage() {
         <p className="mt-1.5 text-sm text-neutral-600">
           Discount codes are validated and applied by the checkout transaction, never by the browser.
         </p>
+        {notice ? (
+          <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {notice === "invalid"
+              ? "That coupon request was invalid. Please try again."
+              : "The coupon status could not be changed. Please try again."}
+          </p>
+        ) : null}
       </header>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_22rem]">

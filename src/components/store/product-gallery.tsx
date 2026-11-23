@@ -23,12 +23,14 @@ export function ProductGallery({
   return (
     <div>
       <div className="relative aspect-square overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--background)]">
-        <ProductImage
-          src={active?.url ?? null}
-          alt={active?.altText ?? name}
-          sizes="(max-width: 1024px) 100vw, 50vw"
-          priority
-        />
+        <div key={activeIndex} className="animate-fade-in absolute inset-0">
+          <ProductImage
+            src={active?.url ?? null}
+            alt={active?.altText ?? name}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+          />
+        </div>
       </div>
 
       {images.length > 1 ? (
@@ -40,7 +42,7 @@ export function ProductGallery({
               onClick={() => setActiveIndex(index)}
               aria-label={`View image ${index + 1} of ${images.length}`}
               aria-pressed={index === activeIndex}
-              className={`relative size-20 shrink-0 overflow-hidden rounded-xl border-2 bg-[color:var(--background)] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] ${
+              className={`relative size-20 shrink-0 overflow-hidden rounded-xl border-2 bg-[color:var(--background)] transition hover:scale-[1.03] active:scale-95 motion-reduce:hover:scale-100 motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)] ${
                 index === activeIndex ? "border-[color:var(--brand)]" : "border-transparent hover:border-[color:var(--border)]"
               }`}
             >

@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
 
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/form";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-import { setCategoryActiveAction } from "./actions";
+import { deleteCategoryAction, setCategoryActiveAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Categories · EveryNest",
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 interface CategoriesPageProps {
-  searchParams: Promise<{ page?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; status?: string; reason?: string }>;
 }
 
 const PAGE_SIZE = 20;
@@ -25,7 +26,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/categories");
+  const { access } = await requirePermission("categories.view", "/admin/categories");
 
   const params = await searchParams;
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
@@ -85,6 +86,23 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
       {params.status === "error" ? (
         <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           That status change could not be saved. Please try again.
+        </p>
+      ) : null}
+      {params.status === "deleted" ? (
+        <p role="status" className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Category permanently deleted.
+        </p>
+      ) : null}
+      {params.status === "delete-blocked" ? (
+        <p role="alert" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {params.reason
+            ? `This category could not be deleted: ${params.reason}`
+            : "This category could not be deleted because it has subcategories, products or filter assignments."}
+        </p>
+      ) : null}
+      {params.status === "delete-error" ? (
+        <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          That delete request was invalid. Please try again.
         </p>
       ) : null}
       {error ? (
@@ -184,6 +202,15 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
                               {category.is_active ? "Deactivate" : "Activate"}
                             </button>
                           </form>
+                          {access.permissions.includes("categories.delete") ? (
+                            <form action={deleteCategoryAction}>
+                              <input type="hidden" name="id" value={category.id} />
+                              <ConfirmDeleteButton
+                                label="Delete"
+                                confirmText={`Permanently delete ${category.name}? This cannot be undone.`}
+                              />
+                            </form>
+                          ) : null}
                         </div>
                       </td>
                     </tr>

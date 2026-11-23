@@ -7,7 +7,7 @@ import { OrderContactLinks } from "@/components/admin/order-contact-links";
 import { OrderTransitionForm } from "@/components/admin/order-transition-form";
 import { secondaryButtonClass } from "@/components/ui/form";
 import { OrderStatusBadge } from "@/components/ui/order-status";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { loadOrder } from "@/lib/order-data";
 import { formatOrderDate, formatOrderPaisa, staffTransitions } from "@/lib/orders";
 import { formatPkr } from "@/lib/money";
@@ -28,7 +28,7 @@ export default async function AdminOrderDetailPage({ params }: AdminOrderDetailP
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/orders");
+  await requirePermission("orders.view", "/admin/orders");
 
   const { id } = await params;
   if (!uuidSchema.safeParse(id).success) notFound();

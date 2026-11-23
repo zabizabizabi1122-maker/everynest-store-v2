@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { formatDecimalPaisa } from "@/lib/checkout";
 import { formatOrderDate, formatOrderPaisa, type OrderSummary } from "@/lib/orders";
@@ -26,8 +27,8 @@ export function SalesOverview({
   const max = maxDailyRevenue(days);
 
   return (
-    <section aria-labelledby="sales-overview" className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-neutral-200 px-5 py-4">
+    <section aria-labelledby="sales-overview" className="overflow-hidden rounded-2xl border border-[color:var(--border)] bg-white shadow-sm">
+      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[color:var(--border)] px-5 py-4">
         <h2 id="sales-overview" className="text-base font-semibold">Sales overview</h2>
         <p className="text-xs text-neutral-500">Verified, processing, shipped and delivered orders · {timezone} days</p>
       </header>
@@ -42,11 +43,14 @@ export function SalesOverview({
               <div key={day.day} className="grid grid-cols-[4.5rem_1fr_6.5rem] items-center gap-3 text-xs">
                 <span className="text-neutral-600">{formatReportDay(day.day)}</span>
                 <div
-                  className="h-2.5 overflow-hidden rounded-full bg-neutral-100"
+                  className="h-2.5 overflow-hidden rounded-full bg-[color:var(--border)]/70"
                   role="img"
                   aria-label={`${formatReportDay(day.day)}: ${formatDecimalPaisa(day.revenuePaisa)} from ${day.orders} orders`}
                 >
-                  <div className="h-full rounded-full bg-[color:var(--brand)]" style={{ width: `${width}%` }} />
+                  <div
+                    className="sales-bar h-full rounded-full bg-[color:var(--brand)]"
+                    style={{ "--bar-width": `${width}%` } as CSSProperties}
+                  />
                 </div>
                 <span className="text-right font-medium tabular-nums text-neutral-800">
                   {formatDecimalPaisa(day.revenuePaisa)}
@@ -62,8 +66,8 @@ export function SalesOverview({
 
 export function TopProductsTable({ products }: { products: readonly TopProduct[] }) {
   return (
-    <section aria-labelledby="top-products" className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      <header className="border-b border-neutral-200 px-5 py-4">
+    <section aria-labelledby="top-products" className="overflow-hidden rounded-2xl border border-[color:var(--border)] bg-white shadow-sm">
+      <header className="border-b border-[color:var(--border)] px-5 py-4">
         <h2 id="top-products" className="text-base font-semibold">Top-selling products</h2>
         <p className="mt-0.5 text-xs text-neutral-500">Ranked by units sold in real, non-cancelled orders.</p>
       </header>
@@ -72,7 +76,7 @@ export function TopProductsTable({ products }: { products: readonly TopProduct[]
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-lg text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+            <thead className="border-b border-[color:var(--border)] bg-[color:var(--background)] text-xs uppercase tracking-wide text-neutral-500">
               <tr>
                 <th scope="col" className={TABLE_HEAD}>Product</th>
                 <th scope="col" className={TABLE_HEAD}>SKU</th>
@@ -80,9 +84,9 @@ export function TopProductsTable({ products }: { products: readonly TopProduct[]
                 <th scope="col" className={`${TABLE_HEAD} text-right`}>Revenue</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-[color:var(--border)]/70">
               {products.map((product) => (
-                <tr key={product.variantId}>
+                <tr key={product.variantId} className="transition hover:bg-[color:var(--background)]">
                   <td className={TABLE_CELL}>
                     <span className="font-medium text-neutral-900">{product.productName}</span>
                     <span className="mt-0.5 block text-xs text-neutral-500">{product.variantLabel}</span>
@@ -104,8 +108,8 @@ export function TopProductsTable({ products }: { products: readonly TopProduct[]
 
 export function LowStockTable({ items }: { items: readonly LowStockItem[] }) {
   return (
-    <section aria-labelledby="low-stock" className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      <header className="border-b border-neutral-200 px-5 py-4">
+    <section aria-labelledby="low-stock" className="overflow-hidden rounded-2xl border border-[color:var(--border)] bg-white shadow-sm">
+      <header className="border-b border-[color:var(--border)] px-5 py-4">
         <h2 id="low-stock" className="text-base font-semibold">Low-stock report</h2>
         <p className="mt-0.5 text-xs text-neutral-500">Active variants where stock is at or below the reorder level.</p>
       </header>
@@ -114,7 +118,7 @@ export function LowStockTable({ items }: { items: readonly LowStockItem[] }) {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-lg text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+            <thead className="border-b border-[color:var(--border)] bg-[color:var(--background)] text-xs uppercase tracking-wide text-neutral-500">
               <tr>
                 <th scope="col" className={TABLE_HEAD}>Product</th>
                 <th scope="col" className={TABLE_HEAD}>SKU</th>
@@ -122,9 +126,9 @@ export function LowStockTable({ items }: { items: readonly LowStockItem[] }) {
                 <th scope="col" className={`${TABLE_HEAD} text-right`}>Reorder at</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-[color:var(--border)]/70">
               {items.map((item) => (
-                <tr key={item.variantId}>
+                <tr key={item.variantId} className="transition hover:bg-[color:var(--background)]">
                   <td className={`${TABLE_CELL} font-medium text-neutral-900`}>{item.productName}</td>
                   <td className={`${TABLE_CELL} font-mono text-xs text-neutral-600`}>{item.sku}</td>
                   <td className={`${TABLE_CELL} text-right font-semibold tabular-nums text-rose-700`}>{item.stock}</td>
@@ -141,8 +145,8 @@ export function LowStockTable({ items }: { items: readonly LowStockItem[] }) {
 
 export function RecentOrdersTable({ orders }: { orders: readonly OrderSummary[] }) {
   return (
-    <section aria-labelledby="recent-orders" className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-neutral-200 px-5 py-4">
+    <section aria-labelledby="recent-orders" className="overflow-hidden rounded-2xl border border-[color:var(--border)] bg-white shadow-sm">
+      <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[color:var(--border)] px-5 py-4">
         <h2 id="recent-orders" className="text-base font-semibold">Recent orders</h2>
         <Link href="/admin/orders" className="text-xs font-semibold text-[color:var(--brand)] hover:underline">
           All orders →
@@ -153,7 +157,7 @@ export function RecentOrdersTable({ orders }: { orders: readonly OrderSummary[] 
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-xl text-left text-sm">
-            <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+            <thead className="border-b border-[color:var(--border)] bg-[color:var(--background)] text-xs uppercase tracking-wide text-neutral-500">
               <tr>
                 <th scope="col" className={TABLE_HEAD}>Order</th>
                 <th scope="col" className={TABLE_HEAD}>Customer</th>
@@ -161,9 +165,9 @@ export function RecentOrdersTable({ orders }: { orders: readonly OrderSummary[] 
                 <th scope="col" className={`${TABLE_HEAD} text-right`}>Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-[color:var(--border)]/70">
               {orders.map((order) => (
-                <tr key={order.id} className="transition hover:bg-neutral-50">
+                <tr key={order.id} className="transition hover:bg-[color:var(--background)]">
                   <td className={`${TABLE_CELL} font-medium`}>
                     <Link href={`/admin/orders/${order.id}`} className="text-[color:var(--brand)] hover:underline">
                       {order.orderNumber}

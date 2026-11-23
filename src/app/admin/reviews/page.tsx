@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 
 import { ReviewModerationForm } from "@/components/admin/review-moderation-form";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { reviewStatusLabel, type ReviewStatus } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,7 +38,7 @@ export default async function AdminReviewsPage({ searchParams }: ReviewsPageProp
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  await requireStaff("/admin/reviews");
+  await requirePermission("reviews.view", "/admin/reviews");
 
   const params = await searchParams;
   const requestedStatus = params.status ?? "";

@@ -27,8 +27,9 @@ describe("customer admin helpers", () => {
 
   it("only accepts known role filters", () => {
     expect(parseCustomerRole("admin")).toBe("admin");
-    expect(parseCustomerRole("staff")).toBe("staff");
+    expect(parseCustomerRole("super_admin")).toBe("super_admin");
     expect(parseCustomerRole("customer")).toBe("customer");
+    expect(parseCustomerRole("staff")).toBeNull();
     expect(parseCustomerRole("superadmin")).toBeNull();
     expect(parseCustomerRole(undefined)).toBeNull();
   });

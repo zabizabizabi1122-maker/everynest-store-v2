@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 
 import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/form";
-import { requireStaff } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { isAdminRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,7 +26,7 @@ export default async function SuppliersPage({ searchParams }: SuppliersPageProps
   // request-bound before that read so Next.js does not prerender it.
   await connection();
 
-  const { profile } = await requireStaff("/admin/suppliers");
+  const { profile } = await requirePermission("suppliers.view", "/admin/suppliers");
   const canWrite = isAdminRole(profile.role);
 
   const params = await searchParams;
