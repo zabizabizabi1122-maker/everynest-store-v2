@@ -30,7 +30,7 @@ vi.mock("@/lib/supabase/server", () => ({
   })),
 }));
 
-import { loginAction } from "./actions";
+import { loginAction, signOutAction } from "./actions";
 
 function loginForm(overrides: Record<string, string> = {}): FormData {
   const form = new FormData();
@@ -114,5 +114,20 @@ describe("loginAction", () => {
     expect(result.status).toBe("error");
     expect(result.message).toContain("Too many sign-in attempts");
     expect(mocks.signInWithPassword).not.toHaveBeenCalled();
+  });
+});
+
+describe("signOutAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("ends the Supabase session globally and returns to sign-in with a notice", async () => {
+    await expect(signOutAction()).rejects.toThrow(
+      "NEXT_REDIRECT:/login?notice=signed-out",
+    );
+
+    expect(mocks.signOut).toHaveBeenCalledWith({ scope: "global" });
+    expect(mocks.redirect).toHaveBeenCalledWith("/login?notice=signed-out");
   });
 });

@@ -119,5 +119,5 @@ export async function signOutAction(): Promise<void> {
     console.error("Sign-out request failed", error);
   }
 
-  redirect("/?notice=signed-out");
+  redirect("/login?notice=signed-out");
 }

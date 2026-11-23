@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { secondaryButtonClass } from "@/components/ui/form";
+
 /**
  * Layout for the administrator sign-in screen.
  *
@@ -17,11 +19,20 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         >
           EveryNest Admin
         </Link>
-        <Link
-          href="/"
-          className="rounded-lg px-2 py-1 text-sm text-[color:var(--muted)] transition hover:text-[color:var(--foreground)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--primary)]"
-        >
-          Back to store
+        <Link href="/" className={`${secondaryButtonClass} gap-2`} aria-label="View the EveryNest website">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="size-4"
+          >
+            <path d="M14 5h5v5M19 5l-7 7M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+          </svg>
+          View website
         </Link>
       </header>
 
